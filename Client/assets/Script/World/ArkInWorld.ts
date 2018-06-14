@@ -1,7 +1,7 @@
-import { DataMgr, UserData } from "./DataMgr";
-import MainCtrl from "./MainCtrl";
-import WorldUI from "./WorldUI";
-import { FlagMgr } from "./UI/FlagMgr";
+import { DataMgr, UserData } from "../DataMgr";
+import MainCtrl from "../MainCtrl";
+import WorldUI from "../WorldUI";
+import { FlagMgr } from "../UI/FlagMgr";
 
 const { ccclass, property } = cc._decorator;
 
@@ -29,7 +29,6 @@ export default class ArkInWorld extends cc.Component {
 
     setAndRefresh(data: UserData, zoomScale: number) {
         this.data = data;
-        this.sprArk.node.setContentSize(data.arkSize, data.arkSize);
         this.lblName.string = data.nickname;
         this.refreshZoom(zoomScale);
 
@@ -37,8 +36,10 @@ export default class ArkInWorld extends cc.Component {
     }
 
     refreshZoom(zoomScale: number) {
-        this.node.position = new cc.Vec2(this.data.currentLocation.x, this.data.currentLocation.y).mul(zoomScale);
-        this.grpInfo.opacity = WorldUI.Instance.zoomScale > 0.08 || WorldUI.Instance.selectedObjectNode == this.node.parent || this.data == DataMgr.myData ? 255 : 0;
+        let curLoc = DataMgr.getUserCurrentLocation(this.data);
+        this.node.position = curLoc.mul(zoomScale);
+        console.log('update ark refreshZoom', this.data.locationData, curLoc, this.node.position);
+        // this.grpInfo.opacity = WorldUI.Instance.zoomScale > 0.08 || WorldUI.Instance.selectedObjectNode == this.node.parent || this.data == DataMgr.myData ? 255 : 0;
     }
 
     update(dt: number) {

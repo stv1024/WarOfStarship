@@ -1,29 +1,36 @@
 "use strict";
 
-let User = function () {
-    let rad = Math.random() * Math.PI;
-    this.nickname = "";
-    this.address = "";
-    this.country = "";
-    this.state = 0; //0:sailing 1:collecting
-    this.hull = 1; //完整度
-    this.expandCnt = 0;
-    let locData = {};
-    locData.speed = 0;
-    locData.lastLocationX = Math.cos(rad) * 5000;
-    locData.lastLocationY = Math.sin(rad) * 5000;
-    locData.destinationX = null;
-    locData.destinationY = null;
-    locData.lastLocationTime = (new Date()).valueOf();
-    //this.rechargeOnExpand = new BigNumber(0);
-    this.locationData = locData;
-    this.buildingData = {
+let User = function (jsonStr) {
+    if (jsonStr) {
+        let obj = JSON.parse(jsonStr);
+        for (let key in obj){
+            this[key] = obj[key];
+        }
+    } else {
+        let rad = Math.random() * Math.PI;
+        this.nickname = "";
+        this.address = "";
+        this.country = "";
+        this.state = 0; //0:sailing 1:collecting
+        this.hull = 1; //完整度
+        this.expandCnt = 0;
+        let locData = {};
+        locData.speed = 0;
+        locData.lastLocationX = Math.cos(rad) * 5000;
+        locData.lastLocationY = Math.sin(rad) * 5000;
+        locData.destinationX = null;
+        locData.destinationY = null;
+        locData.lastLocationTime = (new Date()).valueOf();
+        //this.rechargeOnExpand = new BigNumber(0);
+        this.locationData = locData;
+        this.buildingData = {
 
-    };
-    this.cargoData = {
-        energy: 0,
-        iron: 0,
-    };
+        };
+        this.cargoData = {
+            energy: 0,
+            iron: 0,
+        };
+    }
 };
 
 User.prototype = {
@@ -35,17 +42,9 @@ User.prototype = {
 let Island = function (jsonStr) {
     if (jsonStr) {
         let obj = JSON.parse(jsonStr);
-        this.id = obj.id;
-        this.occupant = obj.occupant;
-        this.lastMineTime = obj.lastMineTime;
-        this.fighterPower = obj.fighterPower;
-        this.money = new BigNumber(obj.money);
-        this.sponsor = obj.sponsor;
-        this.sponsorName = obj.sponsorName;
-        this.sponsorLink = obj.sponsorLink;
-        this.mineSpeed = obj.mineSpeed;
-        this.minberBalance = obj.minberBalance;
-        this.lastBattleTime = obj.lastBattleTime;
+        for (let key in obj){
+            this[key] = obj[key];
+        }
     } else {
         this.id = 0;
         this.occupant = "";
@@ -79,9 +78,8 @@ let BigNumberDesc = {
 let GameContract = function () {
     LocalContractStorage.defineProperty(this, "adminAddress");
     LocalContractStorage.defineProperty(this, "totalIslandCnt");
-    LocalContractStorage.defineProperty(this, "maxArkPrice", BigNumberDesc);
     LocalContractStorage.defineProperty(this, "totalNas", BigNumberDesc);
-    LocalContractStorage.defineProperty(this, "allArkList", {
+    LocalContractStorage.defineProperty(this, "allUserList", {
         parse: function (jsonText) {
             return JSON.parse(jsonText);
         },
@@ -110,7 +108,6 @@ let GameContract = function () {
 GameContract.prototype = {
     init: function () {
         this.adminAddress = "n1bXKq7e2rP6U32z4WHrKW8NTZWsqfhyotb";
-        this.maxArkPrice = new BigNumber(1e17);
         this.totalNas = new BigNumber(0);
         this.shipSpeed = 100;
         this.energyCostPerLyExpand = 1;
@@ -124,7 +121,6 @@ GameContract.prototype = {
         if (country.length > 20) {
             throw new Error("Country name is too long.");
         }
-        let user = new User();
         let userAddress = Blockchain.transaction.from;
         let value = Blockchain.transaction.value;
 
@@ -133,6 +129,8 @@ GameContract.prototype = {
         }
 
         this.totalNas = value.plus(this.totalNas);
+
+        let user = new User();
         user.nickname = nickname;
         user.country = country;
         user.address = userAddress;
@@ -190,19 +188,19 @@ GameContract.prototype = {
         };
     },
     get_map_info: function () {
-        let allArks = this.allUsers
-        let arkInfo = this.allUserList.map(function (address) {
-            return allArks.get(address);
+        let allUsers = this.allUsers;
+        let users = this.allUserList.map(function (address) {
+            return allUsers.get(address);
         });
-        let islandInfo = [];
+        let islands = [];
         for (let i = 0; i < this.totalIslandCnt; i++) {
-            islandInfo.push(this.allIslands.get(i));
+            islands.push(this.allIslands.get(i));
         }
         return {
             "success": true,
             "result_data": {
-                "ark_info": arkInfo,
-                "island_info": islandInfo
+                "users": users,
+                "islands": islands
             }
         };
     },

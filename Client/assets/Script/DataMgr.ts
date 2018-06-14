@@ -1,59 +1,34 @@
 import WorldUI from "./WorldUI";
+import MathUtil from "./Utils/MathUtil";
 
 export class DataMgr {
 
     static myData: UserData;
     static myCargoData: CargoData[];
     static myBuildingData: BuildingData[];
-    static myTechData: TechData[];
-    static idleWorkers: number = 0;
-    static currentWorkingTech: string;
-    static populationLimit: number = 0;
-    static aboveIronMine = false;
 
     static othersData = {};
     static allIslandData = {};
 
     static BuildingConfig: BuildingInfo[];
     static CargoConfig: CargoInfo[];
-    static TechConfig: TechInfo[];
-    static IronMineConfig: MineInfo[];
 
     static changed = false;
-    static populationGrowPerMin = 0;
-    static researchRatePerMin = 0;
     static outputRates = {};
 
-    static SmallArkSize = 7;
-    static StdArkSize = 9;
-    static LargeArkSize = 21;
+    static shipSpeed = 100;
+    static energyCostPerLyExpand = 1;
 
-    static MethaneCostPerKmPerSize = 0.005;
-
-    static RechargeToArkSize = [
-        [0, 9],
-        [0.001, 13],
-        [0.006, 17],
-        [0.01, 21],
-        [0.1, 25],
-        [1, 30],
-        [4, 35],
-    ]
-
-    static getArkSpeedByTech(hasTech?: boolean) {
-        if (hasTech) {
-            return 500;
-        }
-        return 200;
+    static getUserCurrentLocation(user) {
+        let lastLocation = new cc.Vec2(user.locationData.lastLocationX, user.locationData.lastLocationY);
+        if (user.locationData.destinationX == null || user.locationData.destinationY == null) return lastLocation;
+        let destination = new cc.Vec2(user.locationData.destinationX, user.locationData.destinationY);
+        let dist = lastLocation.sub(destination).mag();
+        let time = dist / (user.speed / 60 / 1000);
+        let t = (Number(new Date()) - user.locationData.lastLocationTime) / time;
+        return MathUtil.lerpVec2(lastLocation, destination, t, true);
     }
 
-    static GetArkSizeByRecharge(rechargeOnExpandInNas: number) {
-        for (let i = this.RechargeToArkSize.length - 1; i >= 0; i--) {
-            if (rechargeOnExpandInNas >= this.RechargeToArkSize[i][0]) {
-                return this.RechargeToArkSize[i][1];
-            }
-        }
-    }
     static getMethaneCostOfAttack(distance: number, tankPower, chopperPower, shipPower) {
         return 0.01 * distance * (tankPower + chopperPower + shipPower);
     }
@@ -63,58 +38,26 @@ export class DataMgr {
         let curMoney = data.money * (isMining ? Math.exp(-data.miningRate * (Number(new Date()) - data.lastMineTime) / (1000 * 3600)) : 1);
         return curMoney;
     }
-
-    static readData() {
-        try {
-            let myData = JSON.parse(cc.sys.localStorage.getItem('user0'));
-            DataMgr.myData = myData;
-            DataMgr.myBuildingData = JSON.parse(cc.sys.localStorage.getItem('user0Building'));
-            DataMgr.myCargoData = JSON.parse(cc.sys.localStorage.getItem('user0Cargo'));
-            DataMgr.myTechData = JSON.parse(cc.sys.localStorage.getItem('user0Tech'));
-            DataMgr.currentWorkingTech = JSON.parse(cc.sys.localStorage.getItem('user0CurrentWorkingTech'));
-            DataMgr.changed = true;
-            console.log('finish read data', myData);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    static autosaveCountdown = 15;
-    static writeData() {
-        try {
-            if (DataMgr.myData) {
-                cc.sys.localStorage.setItem('user0', JSON.stringify(DataMgr.myData));
-                cc.sys.localStorage.setItem('user0Building', JSON.stringify(DataMgr.myBuildingData));
-                cc.sys.localStorage.setItem('user0Cargo', JSON.stringify(DataMgr.myCargoData));
-                cc.sys.localStorage.setItem('user0Tech', JSON.stringify(DataMgr.myTechData));
-                cc.sys.localStorage.setItem('user0CurrentWorkingTech', JSON.stringify(DataMgr.currentWorkingTech));
-                this.autosaveCountdown += 15;
-                console.log('finish write data', DataMgr.myData, DataMgr.myBuildingData);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    static clearData() {
-        cc.sys.localStorage.removeItem('user0');
-        cc.sys.localStorage.removeItem('user0Building');
-    }
-
 }
 
+
+export class LocationData {
+    speed: number; //ly/分钟
+    lastLocationX: number;
+    lastLocationY: number;
+    lastLocationTime: number;
+    destinationX: number;
+    destinationY: number;
+}
 export class UserData {
     nickname: string;
     address: string; //区块链地址
     country: string;
-    arkSize: number; //0: 简陋方舟, 1, 2
-    currentLocation: cc.Vec2 = cc.Vec2.ZERO;
-    population: number = 8;
-    speed: number = 0; //km/分钟
-    locationX: number;
-    locationY: number;
-    lastLocationTime: number;
-    destinationX: number;
-    destinationY: number;
-    rechargeOnExpand: number; //扩建花了多少钱
+    expandCnt = 0;
+    locationData: LocationData;
+    cargoData = {
+        energy: 0,
+    };
 }
 export class BuildingInfo {
     id: string;

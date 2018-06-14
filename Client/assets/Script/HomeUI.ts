@@ -20,14 +20,12 @@ export default class HomeUI extends BaseUI {
     }
 
     @property(cc.Label)
-    lblTotalArkCount: cc.Label = null;
+    lblTotalUserCount: cc.Label = null;
 
     @property(cc.Button)
-    btnClaim0: cc.Button = null;
+    btnWatchGalaxy: cc.Button = null;
     @property(cc.Button)
-    btnClaim1: cc.Button = null;
-    @property(cc.Button)
-    btnClaim2: cc.Button = null;
+    btnClaim: cc.Button = null;
 
     @property(cc.Label)
     lblNickname: cc.Label = null;
@@ -48,27 +46,24 @@ export default class HomeUI extends BaseUI {
 
     update() {
         if (DataMgr.myData) {
-            this.btnClaim0.getComponentInChildren(cc.Label).string = DataMgr.myData.arkSize < DataMgr.StdArkSize ? '进入' : '无法领取';
-            this.btnClaim1.getComponentInChildren(cc.Label).string = DataMgr.myData.arkSize < DataMgr.StdArkSize ? '领取' : DataMgr.myData.arkSize < DataMgr.LargeArkSize ? '进入' : '无法领取';
-            this.btnClaim2.getComponentInChildren(cc.Label).string = DataMgr.myData.arkSize < DataMgr.StdArkSize ? '领取' : DataMgr.myData.arkSize < DataMgr.LargeArkSize ? '无法领取' : '进入';
-            this.btnClaim0.interactable = DataMgr.myData.arkSize < DataMgr.StdArkSize;
-            this.btnClaim1.interactable = DataMgr.myData.arkSize < DataMgr.LargeArkSize;
-            this.btnClaim2.interactable = DataMgr.myData.arkSize < DataMgr.StdArkSize || DataMgr.myData.arkSize >= DataMgr.LargeArkSize;
+            this.btnClaim.getComponentInChildren(cc.Label).string = '进入';
             if (DataMgr.myData.nickname) this.lblNickname.string = DataMgr.myData.nickname;
             if (DataMgr.myData.country) this.country = DataMgr.myData.country;
         } else {
-            this.btnClaim0.getComponentInChildren(cc.Label).string = '领取';
-            this.btnClaim1.getComponentInChildren(cc.Label).string = '领取';
-            this.btnClaim2.getComponentInChildren(cc.Label).string = '领取';
+            this.btnClaim.getComponentInChildren(cc.Label).string = '领取';
         }
 
         let self = this;
         if (MainCtrl.Ticks % 50 == 0) FlagMgr.setFlag(this.sprFlag, this.country);
-        if (MainCtrl.Ticks % 100 == 0) this.lblTotalArkCount.string = (Object.keys(DataMgr.othersData).length + 1).toFixed();
+        if (MainCtrl.Ticks % 100 == 0) this.lblTotalUserCount.string = (Object.keys(DataMgr.othersData).length + 1).toFixed();
 
     }
 
-    onClaim(event, index: string) {
+    onWatchGalaxyClick() {
+        console.log('观看银河系，或赞助商入口')
+    }    
+
+    onClaim() {
         //检查昵称、国家
         if (!this.lblNickname.string || !this.country) {
             EditNicknamePanel.Instance.node.active = true;
@@ -76,53 +71,10 @@ export default class HomeUI extends BaseUI {
             return;
         }
         if (DataMgr.myData) {
-            switch (index) {
-                case '0': {
-                    if (DataMgr.myData.arkSize < DataMgr.StdArkSize) {
-                        //进入
-                        CvsMain.EnterUI(WorldUI);
-                    }
-                    break;
-                }
-                case '1': {
-                    if (DataMgr.myData.arkSize < DataMgr.StdArkSize) {
-                        //领取，调用合约
-                        BlockchainMgr.Instance.claimArk(0);
-                    } else if (DataMgr.myData.arkSize < DataMgr.LargeArkSize) {
-                        //进入
-                        CvsMain.EnterUI(WorldUI);
-                    }
-                    break;
-                }
-                case '2': {
-                    if (DataMgr.myData.arkSize < DataMgr.StdArkSize) {
-                        //领取，调用合约
-                        BlockchainMgr.Instance.claimArk(0.01);
-                    } else if (DataMgr.myData.arkSize >= DataMgr.LargeArkSize) {
-                        //进入
-                        CvsMain.EnterUI(WorldUI);
-                    }
-                    break;
-                }
-            }
+            CvsMain.EnterUI(WorldUI);
         } else {//DataMgr.myData == null
-            switch (index) {
-                case '0': {
-                    DataMgr.myData = MainCtrl.Instance.generateSmallArkData();
-                    ToastPanel.Toast('领取成功，可进入方舟');
-                    break;
-                }
-                case '1': {
-                    //调用合约
-                    BlockchainMgr.Instance.claimArk(0);
-                    break;
-                }
-                case '2': {
-                    //调用合约
-                    BlockchainMgr.Instance.claimArk(0.01);
-                    break;
-                }
-            }
+            //调用合约
+            BlockchainMgr.Instance.claimNewUser();
         }
     }
 
@@ -161,6 +113,9 @@ export default class HomeUI extends BaseUI {
         const as = MainCtrl.Instance.getComponent(cc.AudioSource);
         as.volume = as.volume > 0 ? 0 : 0.25;
         this.lblMusicButton.string = as.volume > 0 ? '音乐：开' : '音乐：关';
+    }
+    onInstallWalletClick() {
+        window.open("https://github.com/ChengOrangeJu/WebExtensionWallet");
     }
 
     onTestCheat0Click() {

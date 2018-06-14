@@ -91,27 +91,27 @@ export default class ArkUI extends BaseUI {
     onEnable() {
         this.refreshZoom();
 
-        let myData = DataMgr.myData; console.log('size', myData.arkSize)
-        for (let i = -Math.floor(myData.arkSize / 2); i < myData.arkSize / 2; i++) {
-            for (let j = -Math.floor(myData.arkSize / 2); j < myData.arkSize / 2; j++) {
-                let cell = this.cells[i][j];
-                cell.isLand = true;
-                cell.building = null;
-            }
-        }
+        let myData = DataMgr.myData;
+        // for (let i = -Math.floor(myData.arkSize / 2); i < myData.arkSize / 2; i++) {
+        //     for (let j = -Math.floor(myData.arkSize / 2); j < myData.arkSize / 2; j++) {
+        //         let cell = this.cells[i][j];
+        //         cell.isLand = true;
+        //         cell.building = null;
+        //     }
+        // }
 
-        this.buildingContainer.destroyAllChildren();
-        let workers = 0;
-        DataMgr.myBuildingData.forEach(data => {
-            let info = DataMgr.BuildingConfig.find(i => i.id == data.id);
-            console.log('precreatebuilding', data);
-            this.createBuilding(info, data);
-            workers += data.workers;
-        });
+        // this.buildingContainer.destroyAllChildren();
+        // let workers = 0;
+        // DataMgr.myBuildingData.forEach(data => {
+        //     let info = DataMgr.BuildingConfig.find(i => i.id == data.id);
+        //     console.log('precreatebuilding', data);
+        //     this.createBuilding(info, data);
+        //     workers += data.workers;
+        // });
 
-        DataMgr.idleWorkers = myData.population - workers;
+        // DataMgr.idleWorkers = myData.population - workers;
 
-        this.deselectBuilding();
+        // this.deselectBuilding();
     }
 
     refreshZoom() {
@@ -126,21 +126,21 @@ export default class ArkUI extends BaseUI {
 
         this.updateCheckExpand();
 
-        this.cargoLabels['population'].string =
-            `人口 ${DataMgr.myData.population}/${DataMgr.populationLimit} (闲置 ${DataMgr.idleWorkers}) 增长${DataMgr.populationGrowPerMin.toFixed(0)}/min`;
-        for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
-            const cargoInfo = DataMgr.CargoConfig[i];
-            let data = DataMgr.myCargoData.find(d => d.id == cargoInfo.id);
-            let estimateRate: number = DataMgr.outputRates[cargoInfo.id];
-            if (!estimateRate) estimateRate = 0;
-            let str = cargoInfo.Name + '   ' + Math.floor(data ? data.amount : 0).toFixed() + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + ')';
-            if (cargoInfo.id == 'fish34509') {
-                if (data.amount <= 0 && estimateRate < 0) {
-                    str += ' 食物短缺';
-                }
-            }
-            this.cargoLabels[cargoInfo.id].string = str;
-        }
+        // this.cargoLabels['population'].string =
+        //     `人口 ${DataMgr.myData.population}/${DataMgr.populationLimit} (闲置 ${DataMgr.idleWorkers}) 增长${DataMgr.populationGrowPerMin.toFixed(0)}/min`;
+        // for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
+        //     const cargoInfo = DataMgr.CargoConfig[i];
+        //     let data = DataMgr.myCargoData.find(d => d.id == cargoInfo.id);
+        //     let estimateRate: number = DataMgr.outputRates[cargoInfo.id];
+        //     if (!estimateRate) estimateRate = 0;
+        //     let str = cargoInfo.Name + '   ' + Math.floor(data ? data.amount : 0).toFixed() + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + ')';
+        //     if (cargoInfo.id == 'fish34509') {
+        //         if (data.amount <= 0 && estimateRate < 0) {
+        //             str += ' 食物短缺';
+        //         }
+        //     }
+        //     this.cargoLabels[cargoInfo.id].string = str;
+        // }
 
         let prog = this.sldZoom.progress;
         if (!this.pressingZoomSlider) {
@@ -190,7 +190,6 @@ export default class ArkUI extends BaseUI {
             this.grpBuildingInfo.active = false;
         }
 
-        this.ark.setContentSize(DataMgr.myData.arkSize * 100, DataMgr.myData.arkSize * 100);
     }
 
     refreshData() { }
@@ -411,7 +410,7 @@ export default class ArkUI extends BaseUI {
             const needMoney = nextLevel[0] - DataMgr.myData.rechargeOnExpand / 1e18;
             const nextSize = nextLevel[1];
             DialogPanel.PopupWith2Buttons('扩建方舟', `支付 ${CurrencyFormatter.formatNAS(needMoney)}NAS 扩建方舟到 ${nextSize}×${nextSize} 吗`, '取消', null, '支付', () => {
-                BlockchainMgr.Instance.expandArk(needMoney);
+                BlockchainMgr.Instance.expand(needMoney);
             })
 
         } else {

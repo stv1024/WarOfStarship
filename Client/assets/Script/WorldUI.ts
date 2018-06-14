@@ -2,7 +2,6 @@ import CvsMain from "./CvsMain";
 import BaseUI from "./BaseUI";
 import MainCtrl from "./MainCtrl";
 import ArkUI from "./ArkUI";
-import ArkInWorld from "./ArkInWorld";
 import { DataMgr } from "./DataMgr";
 import BlockchainMgr from "./BlockchainMgr";
 import HomeUI from "./HomeUI";
@@ -14,6 +13,7 @@ import SponsorIslandPanel from "./UI/SponsorIslandPanel";
 import IslandInfoFrame from "./UI/IslandInfoFrame";
 import ToastPanel from "./UI/ToastPanel";
 import { SpecialArk } from "./World/SpecialArk";
+import ArkInWorld from "./World/ArkInWorld";
 
 const { ccclass, property } = cc._decorator;
 
@@ -43,8 +43,6 @@ export default class WorldUI extends BaseUI {
         this.initIslandInfoFrames();
     }
 
-    @property(cc.Node)
-    mineContainer: cc.Node = null;
     @property(cc.Node)
     islandContainer: cc.Node = null;
 
@@ -206,11 +204,11 @@ export default class WorldUI extends BaseUI {
             this.grpSail.active = true;
             this.sailDestinationIndicator.active = this.newDestination != null;
             if (this.newDestination) {
-                let pos = new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y);
+                let pos = DataMgr.getUserCurrentLocation(DataMgr.myData);
                 let distance = this.newDestination.sub(pos).mag();
-                let time = distance / DataMgr.getArkSpeedByTech(DataMgr.myTechData.find(d => d.id == 'arkspeed1011').finished);
-                let methane = DataMgr.MethaneCostPerKmPerSize * distance * DataMgr.myData.arkSize;
-                let str = `${distance.toFixed()}km\n${time.toFixed()}min\n${methane.toFixed()}甲烷`;
+                let time = distance / DataMgr.shipSpeed;
+                let energy = distance * (5 + DataMgr.myData.expandCnt) * DataMgr.energyCostPerLyExpand;
+                let str = `${distance.toFixed()}ly\n${time.toFixed()}min\n${energy.toFixed()}反物质`;
                 this.lblDestinationInfo.string = str;
             }
         } else {
@@ -225,7 +223,7 @@ export default class WorldUI extends BaseUI {
 
     onCenterBtnClick() {
         let data = DataMgr.myData;
-        let rawPos = data.currentLocation;
+        let rawPos = DataMgr.getUserCurrentLocation(data);
         rawPos.mulSelf(this.zoomScale);
         this.worldMap.position = rawPos.neg();
     }
@@ -291,7 +289,7 @@ export default class WorldUI extends BaseUI {
     onSelectObjectInfoClick() {
         let speArk = this.selectedObjectNode.getComponent(SpecialArk);
         if (speArk) {
-            let pos = new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y);
+            let pos = DataMgr.getUserCurrentLocation(DataMgr.myData);
             let dist = pos.sub(speArk.location).mag();
             speArk.showInfo(dist);
         }
@@ -341,51 +339,30 @@ export default class WorldUI extends BaseUI {
         this.selectedObjectNode = null;
         this.editSailDestinationMode = true;
         this.newDestination = null;
-        const arkSpeedTechData = DataMgr.myTechData.find(d => d.id == 'arkspeed1011');
-        const myData = DataMgr.myData;
-        myData.speed = DataMgr.getArkSpeedByTech(arkSpeedTechData ? arkSpeedTechData.finished : false);
     }
     onCancelSailClick() {
         this.editSailDestinationMode = false;
         this.newDestination = null;
     }
-    onConfirmSailClick() {
+    onConfirmMoveClick() {
         if (!this.newDestination) {
             ToastPanel.Toast('请先点击地图空白位置，选择目的地，再点√');
             return;
         }
-        const myData = DataMgr.myData;
-        if (myData.arkSize <= DataMgr.SmallArkSize) {
-            DialogPanel.PopupWith1Button('简陋方舟无法航行', '您的方舟是简陋方舟，没有扩建功能，请原地呆着吧。\n想要功能完整的方舟？请回到主界面领取标准方舟或大型方舟。需要安装星云钱包哦！', '知道了', null);
-            return;
-        }
-        let pos = new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y);
-        let distance = this.newDestination.sub(pos).mag();
-        let needMethane = DataMgr.MethaneCostPerKmPerSize * distance * DataMgr.myData.arkSize;
-        let methaneData = DataMgr.myCargoData.find(d => d.id == 'methane74');
-        if (needMethane > methaneData.amount) {
-            DialogPanel.PopupWith1Button('燃料不足', '方舟引擎的唯一动力来源是甲烷。如果你想要环球旅行，多造一些[甲烷采集器]吧！', '知道了', null);
+
+        //能量
+        let user = DataMgr.myData;
+        let curLocation = DataMgr.getUserCurrentLocation(user);
+        let energyCost = this.newDestination.sub(curLocation).mag() * (user.expandCnt + 5) * DataMgr.energyCostPerLyExpand;
+        if (user.cargoData.energy < energyCost) {
+            ToastPanel.Toast("User energy NOT enough.");
             return;
         }
 
-        const arkSpeedTechData = DataMgr.myTechData.find(d => d.id == 'arkspeed1011');
-        myData.speed = DataMgr.getArkSpeedByTech(arkSpeedTechData ? arkSpeedTechData.finished : false);
-        let deltaData = {};
-        deltaData['nickname'] = myData.nickname;
-        deltaData['country'] = myData.country;
-        deltaData['arkSize'] = myData.arkSize;
-        deltaData['population'] = myData.population;
-        deltaData['speed'] = myData.speed;
-        deltaData['locationX'] = myData.currentLocation.x;
-        deltaData['locationY'] = myData.currentLocation.y;
-        deltaData['destinationX'] = this.newDestination.x;
-        deltaData['destinationY'] = this.newDestination.y;
-
-        console.log('ConfirmSail', deltaData);
-        BlockchainMgr.Instance.setSail(deltaData, () => {
-            methaneData.amount = Math.max(0, methaneData.amount - needMethane);
-        });
+        console.log('ConfirmMove', this.newDestination);
+        BlockchainMgr.Instance.move(this.newDestination.x, this.newDestination.y, null);
     }
+
 
 
     //岛屿初始化
