@@ -14,7 +14,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1jiTBXSNGvuYK6vB4JFz95C4bhATQoJwBm';
+export const ContractAddress = 'n1jkQayukJRKoJzcXF9eGYHT9hNi4Jt2VN5'; //4130f44cbd2a0ec341ec64401cec7e1c5825c93bde1019d8754d992110fdc623
 export const EncKey = 37234;
 
 @ccclass
@@ -24,8 +24,8 @@ export default class BlockchainMgr extends cc.Component {
         BlockchainMgr.Instance = this;
     }
 
-    static BlockchainUrl: string = 'https://mainnet.nebulas.io';
-    // static BlockchainUrl: string = 'https://testnet.nebulas.io';
+    // static BlockchainUrl: string = 'https://mainnet.nebulas.io';
+    static BlockchainUrl: string = 'https://testnet.nebulas.io';
     static WalletAddress: string;
 
     static CheckWalletInterval = 10;
