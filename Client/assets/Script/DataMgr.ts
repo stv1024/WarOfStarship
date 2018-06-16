@@ -6,6 +6,7 @@ export class DataMgr {
     static myData: UserData;
 
     static othersData = {};
+    static allStars = [];
     static allIslandData = {};
 
     static BuildingConfig: BuildingInfo[];
@@ -16,6 +17,17 @@ export class DataMgr {
 
     static shipSpeed = 100;
     static energyCostPerLyExpand = 1;
+
+    private static inited = false;
+    static init(){
+        if (this.inited) return;
+        this.inited = true;
+
+        for (let index = 0; index < 1000; index++) {
+            let starInfo = DataMgr.getStarInfo(index);
+            this.allStars.push(starInfo);
+        }
+    }
 
     static getUserCurrentLocation(user) {
         let lastLocation = new cc.Vec2(user.locationData.lastLocationX, user.locationData.lastLocationY);

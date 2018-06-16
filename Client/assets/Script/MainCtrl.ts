@@ -19,21 +19,12 @@ export default class MainCtrl extends cc.Component {
         cc.loader.loadRes('Building', function (err, txt) {
             console.log('Building loaded', txt);
             DataMgr.BuildingConfig = txt;
-            if (!DataMgr.myBuildingData) DataMgr.myBuildingData = [];
         }.bind(this));
         cc.loader.loadRes('Cargo', function (err, txt) {
-            console.log('Cargo loaded', txt, DataMgr.myCargoData);
+            console.log('Cargo loaded', txt);
             DataMgr.CargoConfig = txt;
-            if (!DataMgr.myCargoData) {
-                DataMgr.myCargoData = [];
-                DataMgr.CargoConfig.forEach(cargoInfo => {
-                    let data = new CargoData();
-                    data.id = cargoInfo.id;
-                    data.amount = 0;
-                    DataMgr.myCargoData.push(data);
-                });
-            }
         }.bind(this));
+        DataMgr.init();
     }
 
     static Ticks = 0;

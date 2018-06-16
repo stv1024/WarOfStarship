@@ -23,7 +23,7 @@ let User = function (jsonStr) {
         locData.lastLocationTime = (new Date()).valueOf();
         this.rechargeOnExpand = new BigNumber(0);
         this.locationData = locData;
-        this.buildingData = {
+        this.buildingMap = {
 
         };
         this.cargoData = {

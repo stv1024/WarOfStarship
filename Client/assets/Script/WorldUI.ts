@@ -85,8 +85,8 @@ export default class WorldUI extends BaseUI {
 
     start() {
         //生成一堆恒星
-        for (let index = 0; index < 1000; index++) {
-            let starInfo = DataMgr.getStarInfo(index);
+        for (let index = 0; index < DataMgr.allStars.length; index++) {
+            let starInfo = DataMgr.allStars[index];
             let starNode = cc.instantiate(this.starTemplate);
             starNode.parent = this.starContainer;
             starNode.position = new cc.Vec2(starInfo.x, starInfo.y);
@@ -94,26 +94,6 @@ export default class WorldUI extends BaseUI {
             starNode.active = true;
         }
     }
-    RSHash(str: string): number {
-        let b = 378551;
-        let a = 63689;
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = (hash * a + str.charCodeAt(i)) % 131313131;
-            a = a * b % 37373737;
-        }
-        return (hash % 131313131) / 131313131;
-    }
-    JSHash(str: string): number {
-        let hash = 1315423911;
-
-        for (let i = 0; i < str.length; i++) {
-            hash ^= ((hash << 5) + str.charCodeAt(i) + (hash >> 2));
-        }
-
-        return hash;
-    }
-
     onEnable() {
         this.editSailDestinationMode = false;
         this.selectedObjectNode = null;

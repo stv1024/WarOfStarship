@@ -1,1 +1,1 @@
-[{"IsFood":"","id":"energy","order":"1","Name":"能量"},{"IsFood":"TRUE","id":"iron","order":"2","Name":"铁"},{"IsFood":"","id":"tank23532","order":"101","Name":"坦克"},{"IsFood":"","id":"chopper424","order":"102","Name":"直升机"},{"IsFood":"","id":"ship40342","order":"103","Name":"战舰"},{"IsFood":"","id":"waterdrop","order":"210","Name":"强子动能水滴"}]
+[{"Name":"反物质","id":"energy"},{"Name":"铁","id":"iron"},{"Name":"战斗机","id":"fighter"},{"Name":"轰炸机","id":"bomber"},{"Name":"激光炮","id":"laser"},{"Name":"水滴","id":"waterdrop"}]
