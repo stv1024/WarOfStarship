@@ -21,7 +21,7 @@ let User = function (jsonStr) {
         locData.destinationX = null;
         locData.destinationY = null;
         locData.lastLocationTime = (new Date()).valueOf();
-        //this.rechargeOnExpand = new BigNumber(0);
+        this.rechargeOnExpand = new BigNumber(0);
         this.locationData = locData;
         this.buildingData = {
 
@@ -48,7 +48,7 @@ let Island = function (jsonStr) {
     } else {
         this.id = 0;
         this.occupant = "";
-        this.lastMineTime = 0; // 上次开发挖矿的时间
+        this.lastMineTime = 0; // 上次开始挖矿的时间
         this.fighterPower = 0;
         this.money = new BigNumber(0);
         this.sponsor = "";
@@ -174,20 +174,33 @@ GameContract.prototype = {
             "result_data": user
         };
     },
-    recharge_expand: function () {
+    recharge_expand: function (count) {
         let userAddress = Blockchain.transaction.from;
-        let ark = this.allUsers.get(userAddress);
+        let user = this.allUsers.get(userAddress);
         let value = Blockchain.transaction.value;
-        if (ark === null) {
-            throw new Error("User should have ark.");
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
         }
         this.totalNas = this.totalNas.plus(value);
-        ark.rechargeOnExpand = ark.rechargeOnExpand.plus(value);
-        this.allUsers.set(userAddress, ark);
+        user.rechargeOnExpand = user.rechargeOnExpand.plus(value);
+        let totalRecharge = user.rechargeOnExpand / 1e18;
+        let cnt = 0;
+        while (true) {
+            totalRecharge -= this.getExpandCost(cnt, 1);
+            if (totalRecharge >= 0) {
+                cnt++;
+            } else {
+                break;
+            }
+        }
+        let added = cnt - user.expandCnt;
+        user.expandCnt = cnt;
+        this.allUsers.set(userAddress, user);
 
         return {
             "success": true,
-            "result_data": ark
+            "result_data": user,
+            "addedCnt": added
         };
     },
     get_map_info: function () {
@@ -459,6 +472,49 @@ GameContract.prototype = {
         }
 
         this._transaction(targetAddress, new BigNumber(value))
+    },
+    getStarInfo: function (index) {
+        let a = (this.APHash1(index.toFixed() + 'startheta'));
+        let b = (this.APHash1(index.toFixed() + 'rhostar'));
+        let c = (this.APHash1(index.toFixed() + 'ironrate'));
+        let d = (this.APHash1(index.toFixed() + 'energyrate'));
+        let theta = a * Math.PI * 2;
+        let l = b * 5000;
+        let x = Math.cos(theta) * l;
+        let y = Math.sin(theta) * l;
+        let starInfo = {};
+        starInfo.x = x;
+        starInfo.y = y;
+        starInfo.ironRate = b * c * 100;
+        starInfo.energyRate = b * d * 100;
+        return starInfo;
+    },
+    APHash1: function (str) {
+        let hash = 0xAAAAAAAA;
+        for (let i = 0; i < str.length; i++) {
+            if ((i & 1) == 0) {
+                hash ^= ((hash << 7) ^ str.charCodeAt(i) * (hash >> 3));
+            }
+            else {
+                hash ^= (~((hash << 11) + str.charCodeAt(i) ^ (hash >> 5)));
+            }
+        }
+        return hash / 0xAAAAAAAA / 1.5 + 0.5;
+    },
+    getExpandCost: function (curExpandCnt, addExpandCnt) {
+        let cost = 0;
+        for (let i = curExpandCnt; i < curExpandCnt + addExpandCnt; i++) {
+            cost += 0.0001 * Math.exp(0.15 * i);
+        }
+        return cost;
+    },
+    getExpandCostNas: function (curExpandCnt, addExpandCnt) {
+        let cost = new BigNumber(0);
+        let a = new BigNumber(0.0001 * 1e18);
+        for (let i = curExpandCnt; i < curExpandCnt + addExpandCnt; i++) {
+            cost = cost.add(a.times(Math.exp(new BigNumber(0.15).times(new BigNumber(i))).toString()).trunc());
+        }
+        return cost;
     }
 }
 

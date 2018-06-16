@@ -14,7 +14,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1ofcomvYUnQNJYSvP8GymfoqN8nyRgqDHx'; //
+export const ContractAddress = 'n1yHugfTsokfMBPLK9J22C7nMjNbAvHwCqf'; //
 export const EncKey = 37234;
 
 @ccclass

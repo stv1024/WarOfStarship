@@ -36,9 +36,52 @@ export class DataMgr {
         let curMoney = data.money * (isMining ? Math.exp(-data.miningRate * (Number(new Date()) - data.lastMineTime) / (1000 * 3600)) : 1);
         return curMoney;
     }
+
+
+    static getStarInfo(index: number): StarInfo {
+        let a = (this.APHash1(index.toFixed() + 'startheta'));
+        let b = (this.APHash1(index.toFixed() + 'rhostar'));
+        let c = (this.APHash1(index.toFixed() + 'ironrate'));
+        let d = (this.APHash1(index.toFixed() + 'energyrate'));
+        let theta = a * Math.PI * 2;
+        let l = b * 5000;
+        let x = Math.cos(theta) * l;
+        let y = Math.sin(theta) * l;
+        let starInfo = new StarInfo();
+        starInfo.x = x;
+        starInfo.y = y;
+        starInfo.ironRate = b * c * 100;
+        starInfo.energyRate = b * d * 100;
+        return starInfo;
+    }
+    static APHash1(str: string) {
+        let hash = 0xAAAAAAAA;
+        for (let i = 0; i < str.length; i++) {
+            if ((i & 1) == 0) {
+                hash ^= ((hash << 7) ^ str.charCodeAt(i) * (hash >> 3));
+            }
+            else {
+                hash ^= (~((hash << 11) + str.charCodeAt(i) ^ (hash >> 5)));
+            }
+        }
+        return hash / 0xAAAAAAAA / 1.5 + 0.5;
+    }
+
+    static getExpandCost(curExpandCnt: number, addExpandCnt: number) {
+        let cost = 0;
+        for (let i = curExpandCnt; i < curExpandCnt + addExpandCnt; i++) {
+            cost += 0.0001 * Math.exp(0.15 * i);
+        }
+        return cost;
+    }
 }
 
-
+export class StarInfo {
+    x: number;
+    y: number;
+    ironRate: number;
+    energyRate: number;
+}
 export class LocationData {
     speed: number; //ly/分钟
     lastLocationX: number;

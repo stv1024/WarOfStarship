@@ -14,6 +14,7 @@ import IslandInfoFrame from "./UI/IslandInfoFrame";
 import ToastPanel from "./UI/ToastPanel";
 import { SpecialArk } from "./World/SpecialArk";
 import ArkInWorld from "./World/ArkInWorld";
+import Star from "./World/Star";
 
 const { ccclass, property } = cc._decorator;
 
@@ -80,18 +81,17 @@ export default class WorldUI extends BaseUI {
     sldZoom: cc.Slider = null;
     pressingZoomSlider = false;
     zoomScale: number = 0.1;
+    lastTickZoomScale = null;
 
     start() {
         //生成一堆恒星
-        for (let index = 0; index < 100; index++) {
-            let theta = (this.APHash(index.toFixed() + 'startheta')) * Math.PI * 2;
-            let l = (this.APHash(index.toFixed() + 'rhostar')) * 1000;
-            let x = Math.cos(theta) * l;
-            let y = Math.sin(theta) * l;
-            console.log(index, x, y);
+        for (let index = 0; index < 1000; index++) {
+            let starInfo = DataMgr.getStarInfo(index);
             let starNode = cc.instantiate(this.starTemplate);
             starNode.parent = this.starContainer;
-            starNode.position = new cc.Vec2(x, y);
+            starNode.position = new cc.Vec2(starInfo.x, starInfo.y);
+            starNode.getComponent(Star).setAndRefresh(starInfo);
+            starNode.active = true;
         }
     }
     RSHash(str: string): number {
@@ -112,18 +112,6 @@ export default class WorldUI extends BaseUI {
         }
 
         return hash;
-    }
-    APHash(str: string) {
-        let hash = 0xAAAAAAAA;
-        for (let i = 0; i < str.length; i++) {
-            if ((i & 1) == 0) {
-                hash ^= ((hash << 7) ^ str.charCodeAt(i) * (hash >> 3));
-            }
-            else {
-                hash ^= (~((hash << 11) + str.charCodeAt(i) ^ (hash >> 5)));
-            }
-        }
-        return hash / 0xAAAAAAAA;
     }
 
     onEnable() {
@@ -180,7 +168,6 @@ export default class WorldUI extends BaseUI {
     refreshZoom() {
         // let size = 12000 * this.zoomScale;
         this.earth.scale = this.zoomScale;
-        this.starContainer.scale = this.zoomScale;
         // this.arkContainer.children.forEach(c => {
         //     c.getComponent(ArkInWorld).refreshZoom(this.zoomScale);
         // })
@@ -213,6 +200,11 @@ export default class WorldUI extends BaseUI {
             let deltaZoom = this.zoomScale / oldZoomScale;
             this.worldMap.position = this.worldMap.position.mul(deltaZoom);
             this.refreshZoom();
+        }
+
+        if (this.lastTickZoomScale != this.zoomScale) {
+            this.lastTickZoomScale = this.zoomScale;
+            this.starContainer.children.forEach(c => c.getComponent(Star).refreshZoom(this.zoomScale));
         }
 
         //选中对象模式
