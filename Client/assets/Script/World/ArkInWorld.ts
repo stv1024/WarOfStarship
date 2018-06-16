@@ -38,11 +38,11 @@ export default class ArkInWorld extends cc.Component {
     refreshZoom(zoomScale: number) {
         let curLoc = DataMgr.getUserCurrentLocation(this.data);
         this.node.position = curLoc.mul(zoomScale);
-        console.log('update ark refreshZoom', this.data.locationData, curLoc, this.node.position);
         // this.grpInfo.opacity = WorldUI.Instance.zoomScale > 0.08 || WorldUI.Instance.selectedObjectNode == this.node.parent || this.data == DataMgr.myData ? 255 : 0;
     }
 
     update(dt: number) {
+        if (!this.data) return;
         this.refreshZoom(WorldUI.Instance.zoomScale);
     }
 

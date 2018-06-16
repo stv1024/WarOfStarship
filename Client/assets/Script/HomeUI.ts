@@ -60,7 +60,8 @@ export default class HomeUI extends BaseUI {
     }
 
     onWatchGalaxyClick() {
-        console.log('观看银河系，或赞助商入口')
+        console.log('观看银河系，或赞助商入口');
+        CvsMain.EnterUI(WorldUI);
     }    
 
     onClaim() {

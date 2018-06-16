@@ -4,8 +4,6 @@ import MathUtil from "./Utils/MathUtil";
 export class DataMgr {
 
     static myData: UserData;
-    static myCargoData: CargoData[];
-    static myBuildingData: BuildingData[];
 
     static othersData = {};
     static allIslandData = {};
@@ -24,7 +22,7 @@ export class DataMgr {
         if (user.locationData.destinationX == null || user.locationData.destinationY == null) return lastLocation;
         let destination = new cc.Vec2(user.locationData.destinationX, user.locationData.destinationY);
         let dist = lastLocation.sub(destination).mag();
-        let time = dist / (user.speed / 60 / 1000);
+        let time = dist / (user.locationData.speed / 60 / 1000);
         let t = (Number(new Date()) - user.locationData.lastLocationTime) / time;
         return MathUtil.lerpVec2(lastLocation, destination, t, true);
     }
@@ -54,6 +52,8 @@ export class UserData {
     address: string; //区块链地址
     country: string;
     expandCnt = 0;
+    state = 0; //0:sailing 1:collecting
+    hull = 1; //完整度
     locationData: LocationData;
     cargoData = {
         energy: 0,

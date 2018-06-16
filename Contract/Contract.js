@@ -3,7 +3,7 @@
 let User = function (jsonStr) {
     if (jsonStr) {
         let obj = JSON.parse(jsonStr);
-        for (let key in obj){
+        for (let key in obj) {
             this[key] = obj[key];
         }
     } else {
@@ -27,8 +27,8 @@ let User = function (jsonStr) {
 
         };
         this.cargoData = {
-            energy: 0,
-            iron: 0,
+            energy: 1000000,
+            iron: 1000000,
         };
     }
 };
@@ -42,7 +42,7 @@ User.prototype = {
 let Island = function (jsonStr) {
     if (jsonStr) {
         let obj = JSON.parse(jsonStr);
-        for (let key in obj){
+        for (let key in obj) {
             this[key] = obj[key];
         }
     } else {
@@ -79,6 +79,8 @@ let GameContract = function () {
     LocalContractStorage.defineProperty(this, "adminAddress");
     LocalContractStorage.defineProperty(this, "totalIslandCnt");
     LocalContractStorage.defineProperty(this, "totalNas", BigNumberDesc);
+    LocalContractStorage.defineProperty(this, "shipSpeed");
+    LocalContractStorage.defineProperty(this, "energyCostPerLyExpand");
     LocalContractStorage.defineProperty(this, "allUserList", {
         parse: function (jsonText) {
             return JSON.parse(jsonText);
@@ -150,13 +152,14 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        if ((locationX !== null && user.locationX !== obj.locationX) ||
-            (locationY !== null && user.locationY !== obj.locationY)) {
+        if (destinationX === null || destinationY === null) {
+            throw new Error("Parameters INVALID.");
         }
         this._recalcUser(user);
-        user.speed = this.shipSpeed;
-        user.destinationX = destinationX;
-        user.destinationY = destinationY;
+        let locData = user.locationData;
+        locData.speed = this.shipSpeed;
+        locData.destinationX = destinationX;
+        locData.destinationY = destinationY;
         let energyCost = this._getSailEnergyCost(user);
         if (user.cargoData.energy < energyCost) {
             throw new Error("User energy NOT enough.");
@@ -273,7 +276,7 @@ GameContract.prototype = {
         let dX = locData.destinationX - locData.lastLocationX;
         let dY = locData.destinationY - locData.lastLocationY;
         let dist = Math.sqrt(dX * dX + dY * dY);
-        return dist * (user.expandCnt + 5) * energyCostPerLyExpand;
+        return dist * (user.expandCnt + 5) * this.energyCostPerLyExpand;
     },
     _lerpVec2: function (a, b, t, clamp) {
         if (clamp) t = Math.max(0, Math.min(1, t));

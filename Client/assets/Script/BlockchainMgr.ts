@@ -14,7 +14,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1eKo7aMCyVHthQKYdqbkfqeAT7P5wgzRBJ'; //
+export const ContractAddress = 'n1ofcomvYUnQNJYSvP8GymfoqN8nyRgqDHx'; //
 export const EncKey = 37234;
 
 @ccclass
@@ -154,14 +154,14 @@ export default class BlockchainMgr extends cc.Component {
     onGetAllMapData(resp) {
         console.log('onGetAllMapData', resp);
         let allData = JSON.parse(resp.result).result_data;
-        let allArkData = allData.users;
+        let allUserData = allData.users;
         let allIslandData = allData.islands;
 
         DataMgr.othersData = {};
-        allArkData.forEach(arkJson => {
-            if (arkJson.address == BlockchainMgr.WalletAddress) {
+        allUserData.forEach(userJson => {
+            if (userJson.address == BlockchainMgr.WalletAddress) {
             } else {
-                DataMgr.othersData[arkJson.address] = arkJson;
+                DataMgr.othersData[userJson.address] = userJson;
             }
         });
         allIslandData.forEach(islandJson => {

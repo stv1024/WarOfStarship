@@ -52,6 +52,11 @@ export default class WorldUI extends BaseUI {
     arkTemplate: cc.Node = null;
 
     @property(cc.Node)
+    starContainer: cc.Node = null;
+    @property(cc.Node)
+    starTemplate: cc.Node = null;
+
+    @property(cc.Node)
     worldMap: cc.Node = null;
     @property(cc.Node)
     earth: cc.Node = null;
@@ -76,6 +81,50 @@ export default class WorldUI extends BaseUI {
     pressingZoomSlider = false;
     zoomScale: number = 0.1;
 
+    start() {
+        //生成一堆恒星
+        for (let index = 0; index < 100; index++) {
+            let theta = (this.APHash(index.toFixed() + 'startheta')) * Math.PI * 2;
+            let l = (this.APHash(index.toFixed() + 'rhostar')) * 1000;
+            let x = Math.cos(theta) * l;
+            let y = Math.sin(theta) * l;
+            console.log(index, x, y);
+            let starNode = cc.instantiate(this.starTemplate);
+            starNode.parent = this.starContainer;
+            starNode.position = new cc.Vec2(x, y);
+        }
+    }
+    RSHash(str: string): number {
+        let b = 378551;
+        let a = 63689;
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash * a + str.charCodeAt(i)) % 131313131;
+            a = a * b % 37373737;
+        }
+        return (hash % 131313131) / 131313131;
+    }
+    JSHash(str: string): number {
+        let hash = 1315423911;
+
+        for (let i = 0; i < str.length; i++) {
+            hash ^= ((hash << 5) + str.charCodeAt(i) + (hash >> 2));
+        }
+
+        return hash;
+    }
+    APHash(str: string) {
+        let hash = 0xAAAAAAAA;
+        for (let i = 0; i < str.length; i++) {
+            if ((i & 1) == 0) {
+                hash ^= ((hash << 7) ^ str.charCodeAt(i) * (hash >> 3));
+            }
+            else {
+                hash ^= (~((hash << 11) + str.charCodeAt(i) ^ (hash >> 5)));
+            }
+        }
+        return hash / 0xAAAAAAAA;
+    }
 
     onEnable() {
         this.editSailDestinationMode = false;
@@ -107,8 +156,8 @@ export default class WorldUI extends BaseUI {
         }
         needToDestroys.forEach(c => c.destroy());
 
-        let arkIW = this.arkContainer.children[0].getComponent(ArkInWorld);
-        arkIW.setAndRefresh(DataMgr.myData, this.zoomScale);
+        this.refreshMyCity();
+
         let i = 0;
         for (let address in DataMgr.othersData) {
             const data = DataMgr.othersData[address];
@@ -118,14 +167,20 @@ export default class WorldUI extends BaseUI {
         }
     }
 
-    refreshMyArk() {
-        let arkIW = this.arkContainer.children[0].getComponent(ArkInWorld);
-        arkIW.setAndRefresh(DataMgr.myData, this.zoomScale);
+    refreshMyCity() {
+        if (DataMgr.myData) {
+            let arkIW = this.arkContainer.children[0].getComponent(ArkInWorld);
+            arkIW.setAndRefresh(DataMgr.myData, this.zoomScale);
+        }
+        else {
+            this.arkContainer.children[0].active = false;
+        }
     }
 
     refreshZoom() {
         // let size = 12000 * this.zoomScale;
         this.earth.scale = this.zoomScale;
+        this.starContainer.scale = this.zoomScale;
         // this.arkContainer.children.forEach(c => {
         //     c.getComponent(ArkInWorld).refreshZoom(this.zoomScale);
         // })
@@ -355,7 +410,7 @@ export default class WorldUI extends BaseUI {
         let curLocation = DataMgr.getUserCurrentLocation(user);
         let energyCost = this.newDestination.sub(curLocation).mag() * (user.expandCnt + 5) * DataMgr.energyCostPerLyExpand;
         if (user.cargoData.energy < energyCost) {
-            ToastPanel.Toast("User energy NOT enough.");
+            ToastPanel.Toast("反物质燃料不足");
             return;
         }
 
