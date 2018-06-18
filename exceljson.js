@@ -2,7 +2,7 @@ node_xj = require("xls-to-json");
 raws = [
     'Building',
     'Cargo',
-    'Tech'
+    'Island'
 ]
 raws.forEach(x => {
     node_xj({
