@@ -51,6 +51,9 @@ export class DataMgr {
     static getBuildingInfo(id: string) {
         return DataMgr.BuildingConfig.find(info => info.id == id);
     }
+    static getCargoInfo(id: string) {
+        return DataMgr.CargoConfig.find(info => info.id == id);
+    }
 
     static getStarInfo(index: number): StarInfo {
         let a = (this.APHash1(index.toFixed() + 'startheta'));
@@ -64,8 +67,8 @@ export class DataMgr {
         let starInfo = new StarInfo();
         starInfo.x = x;
         starInfo.y = y;
-        starInfo.ironRate = b * c * 100;
-        starInfo.energyRate = b * d * 100;
+        starInfo.ironAbundance = b * c;
+        starInfo.energyAbundance = b * d;
         return starInfo;
     }
     static APHash1(str: string) {
@@ -88,13 +91,22 @@ export class DataMgr {
         }
         return cost;
     }
+
+    static getBuildingInfoItemWithLv(buildingId, itemName, lv) {
+        let value = DataMgr.getBuildingInfo(buildingId)[itemName];
+        let multi = DataMgr.getBuildingInfo('_upgradeRate')[itemName];
+        if (!isNaN(multi)) {
+            value = value * Math.pow(multi, lv);
+        }
+        return value;
+    }
 }
 
 export class StarInfo {
     x: number;
     y: number;
-    ironRate: number;
-    energyRate: number;
+    ironAbundance: number;
+    energyAbundance: number;
 }
 export class LocationData {
     speed: number; //ly/分钟
@@ -113,7 +125,7 @@ export class UserData {
     hull = 1; //完整度
     locationData: LocationData;
     expandMap = {
-        //"-3,2": true
+        //"-3,2": {order: 0}
     };
     buildingMap = {
         //"-3,2":{id:"ironcoll", lv:2, recoverTime:10302019313, justBuildOrUpgrade: true}
@@ -122,6 +134,8 @@ export class UserData {
         iron: 0,
         energy: 0,
     };
+    collectingStarIndex = null;
+    lastCalcTime = (new Date()).valueOf();
 }
 export class BuildingInfo {
     id: string;

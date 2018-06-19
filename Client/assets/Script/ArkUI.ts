@@ -9,6 +9,7 @@ import DialogPanel from "./DialogPanel";
 import BuildingInfoPanel from "./UI/BuildingInfoPanel";
 import CurrencyFormatter from "./Utils/CurrencyFormatter";
 import BlockchainMgr from "./BlockchainMgr";
+import ToastPanel from "./UI/ToastPanel";
 
 const { ccclass, property } = cc._decorator;
 
@@ -113,10 +114,10 @@ export default class ArkUI extends BaseUI {
 
         for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
             const cargoInfo = DataMgr.CargoConfig[i];
-            let data = DataMgr.myData.cargoData.find(d => d.id == cargoInfo.id);
-            let estimateRate: number = DataMgr.outputRates[cargoInfo.id];
+            let data = DataMgr.myData.cargoData[cargoInfo.id];
+            let estimateRate: number = 0; // DataMgr.outputRates[cargoInfo.id];
             if (!estimateRate) estimateRate = 0;
-            let str = cargoInfo.Name + '   ' + Math.floor(data ? data.amount : 0).toFixed() + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + ')';
+            let str = cargoInfo.Name + '   ' + Math.floor(data).toFixed() + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + ')';
             this.cargoLabels[cargoInfo.id].string = str;
         }
 
@@ -143,17 +144,27 @@ export default class ArkUI extends BaseUI {
 
         if (this.currentHoldingBlueprint) {
             this.blueprint.active = true;
-            this.blueprint.position = new cc.Vec2(this.currentBlueprintIJ.i * 100 - 50, this.currentBlueprintIJ.j * 100 - 50);
+            this.blueprint.position = new cc.Vec2(this.currentBlueprintIJ.i * 100, this.currentBlueprintIJ.j * 100);
             this.blueprint.setContentSize(100, 100);
-            this.grpBuild.active = true;
             let ableToBuild = true;
+            this.grpBuild.active = true;
             let key = this.currentBlueprintIJ.i + ',' + this.currentBlueprintIJ.j;
-            if (DataMgr.myData.buildingMap[key]) {
-                ableToBuild = false;
-            } else if (!DataMgr.myData.expandMap[key]) {
-                ableToBuild = false;
+            if (this.currentHoldingBlueprint == 'expand') {
+                if (DataMgr.myData.expandMap[key]) {
+                    ableToBuild = false;
+                }
+                if (this.currentBlueprintIJ.i >= 0) {
+                    ableToBuild = false;
+                }
+            } else {
+                if (DataMgr.myData.buildingMap[key]) {
+                    ableToBuild = false;
+                } else if (!DataMgr.myData.expandMap[key]) {
+                    ableToBuild = false;
+                }
             }
             this.btnConfirmBuild.interactable = ableToBuild;
+            this.blueprintIndicator.node.color = ableToBuild ? this.canBuildColor : this.cannotBuildColor;
         } else {
             this.blueprint.active = false;
             this.grpBuild.active = false;
@@ -167,14 +178,39 @@ export default class ArkUI extends BaseUI {
     }
 
     refreshBuildingData() {
+        //floor
+        const expandMap = DataMgr.myData.expandMap;
+        for (let key in expandMap) {
+            expandMap[key].tmpDirty = true;
+        }
+        this.floorContainer.children.forEach(floorNode => {
+            const key = floorNode.name;
+            if (!expandMap[key]) {
+                floorNode.destroy();
+                return;
+            }
+            delete expandMap[key].tmpDirty;
+        });
+        for (let key in expandMap) {
+            if (expandMap[key].tmpDirty) {
+                let floorNode = cc.instantiate(this.floorTemplate);
+                floorNode.parent = this.floorContainer;
+                floorNode.name = key;
+                let ij = JSON.parse('[' + key + ']');
+                floorNode.position = new cc.Vec2(ij[0] * 100, ij[1] * 100);
+                floorNode.active = true;
+                console.log('createfloor', key, ij);
+                delete expandMap[key].tmpDirty;
+            }
+        }
+        //building
         const buildingMap = DataMgr.myData.buildingMap;
         for (let key in buildingMap) {
             buildingMap[key].tmpDirty = true;
         }
         this.buildingContainer.children.forEach(bdgNode => {
             let bdg = bdgNode.getComponent(Building);
-            const ij = bdg.ij;
-            const key = ij.i + ',' + ij.j;
+            const key = bdgNode.name;
             const bdgOnChain = buildingMap[key];
             if (!bdgOnChain) {
                 bdgNode.destroy();
@@ -194,10 +230,13 @@ export default class ArkUI extends BaseUI {
                 let prefabName = info['Prefab'];
                 let buildingNode = cc.instantiate(this[prefabName + 'Template']);
                 buildingNode.parent = this.buildingContainer;
+                buildingNode.name = key;
                 let building = buildingNode.getComponent(Building);
                 building.setInfo(info, data);
-                buildingNode.position = new cc.Vec2(data.i * 100, data.j * 100);
+                let ij = JSON.parse('[' + key + ']');
+                buildingNode.position = new cc.Vec2(ij[0] * 100, ij[1] * 100);
                 buildingNode.active = true;
+                console.log('createbd', key, data);
                 delete buildingMap[key].tmpDirty;
             }
         }
@@ -217,7 +256,7 @@ export default class ArkUI extends BaseUI {
     }
 
     onCenterBtnClick() {
-        this.arkMap.position = new cc.Vec2(0, 0);
+        this.arkMap.position = new cc.Vec2(200, 0);
     }
 
     onPanPadTouchMove(event: cc.Event.EventTouch) {
@@ -261,7 +300,9 @@ export default class ArkUI extends BaseUI {
     blueprint: cc.Node = null;
     @property(cc.Sprite)
     blueprintIndicator: cc.Sprite = null;
-    currentHoldingBlueprint: BuildingInfo = null;
+    readonly canBuildColor = new cc.Color(0, 190, 0);
+    readonly cannotBuildColor = new cc.Color(190, 0, 0);
+    currentHoldingBlueprint = null;
     currentBlueprintIJ: IJ;
     enterBuildMode(buildingInfo: BuildingInfo) {
         this.currentHoldingBlueprint = buildingInfo;
@@ -279,51 +320,34 @@ export default class ArkUI extends BaseUI {
     @property(cc.Button)
     btnConfirmBuild: cc.Button = null;
     onBtnConfirmBuildClick() {
-        //检查重叠
-        let ableToBuild = true;
-        for (let i = 0; i < this.currentHoldingBlueprint.Length; i++) {
-            for (let j = 0; j < this.currentHoldingBlueprint.Width; j++) {
-                let cell = this.cells[this.currentBlueprintIJ.i + i][this.currentBlueprintIJ.j + j];
-                if (cell.building) ableToBuild = false;
-                if (!cell.isLand) ableToBuild = false;
-            }
-        }
-        if (!ableToBuild) return;
-        //确定建造
-        //检查建筑材料
-        let buildMats = [];
-        for (let i = 0; i < 4; i++) {
-            let mat = this.currentHoldingBlueprint['BuildMat' + i];
-            if (mat && mat.length > 0) {
-                let count = this.currentHoldingBlueprint['BuildMat' + i + 'Count'];
-                buildMats.push([mat, count]);
-            }
-        }
-        let enough = true;
-        buildMats.forEach(mat => {
-            let cargoData = DataMgr.myCargoData.find(data => data.id == mat[0]);
-            if (cargoData.amount < mat[1]) {
-                enough = false;
-            }
-        })
-        if (enough) {
-            buildMats.forEach(mat => {
-                let cargoData = DataMgr.myCargoData.find(data => data.id == mat[0]);
-                cargoData.amount -= mat[1];
-            })
-
-            let data = new BuildingData();
-            data.id = this.currentHoldingBlueprint.id;
-            data.ij = this.currentBlueprintIJ.clone();
-            data.workers = 0;
-            DataMgr.myBuildingData.push(data);
-            this.createBuilding(this.currentHoldingBlueprint, data);
-
-            if (this.currentHoldingBlueprint.id == 'road00001') {
-                this.currentBlueprintIJ.j += 1;
-            } else {
-                this.currentHoldingBlueprint = null;
-            }
+        if (this.currentHoldingBlueprint == 'expand') {
+            //确定扩建
+            BlockchainMgr.Instance.callFunction('expand', [this.currentBlueprintIJ.i, this.currentBlueprintIJ.j], DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1),
+                (resp) => {
+                    if (resp.toString().substr(0, 5) != 'Error') {
+                        DialogPanel.PopupWith2Buttons('正在递交扩建计划',
+                            '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                            }, '确定', null);
+                    } else {
+                        ToastPanel.Toast('交易失败:' + resp);
+                    }
+                }
+            );
+        } else {
+            //确定建造
+            BlockchainMgr.Instance.callFunction('build', [this.currentBlueprintIJ.i, this.currentBlueprintIJ.j, this.currentHoldingBlueprint.id], 0,
+                (resp) => {
+                    if (resp.toString().substr(0, 5) != 'Error') {
+                        DialogPanel.PopupWith2Buttons('正在递交建造计划',
+                            '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                            }, '确定', null);
+                    } else {
+                        ToastPanel.Toast('交易失败:' + resp);
+                    }
+                }
+            );
         }
     }
     onBtnCancelBuildClick() {

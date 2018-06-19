@@ -1,8 +1,9 @@
-import { DataMgr } from "./DataMgr";
+import { DataMgr, IJ } from "./DataMgr";
 import BuildingButton from "./BuildingButton";
 import ArkUI from "./ArkUI";
+import CurrencyFormatter from "./Utils/CurrencyFormatter";
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class BuildPanel extends cc.Component {
@@ -16,20 +17,23 @@ export default class BuildPanel extends cc.Component {
     buttonContainer: cc.Node = null;
     @property(cc.Node)
     buttonTemplate: cc.Node = null;
+    @property(cc.Label)
+    lblExpandCost: cc.Label = null;
 
     start() {
-        DataMgr.BuildingConfig.forEach(building => {
+        DataMgr.BuildingConfig.forEach(info => {
+            if (info.id == '_upgradeRate') return;
             let buildingBtnNode = cc.instantiate(this.buttonTemplate);
             buildingBtnNode.parent = this.buttonContainer;
             let buildingBtn = buildingBtnNode.getComponent(BuildingButton);
-            buildingBtn.setAndRefresh(building);
+            buildingBtn.setAndRefresh(info);
             buildingBtnNode.active = true;
         });
         this.buttonTemplate.active = false;
     }
 
-    onEnable () {
-        
+    onEnable() {
+        this.lblExpandCost.string = CurrencyFormatter.formatNAS(DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1)) + 'NAS';
     }
 
     refresh() {
@@ -44,7 +48,9 @@ export default class BuildPanel extends cc.Component {
     }
 
     onBtnExpandClick() {
-        ArkUI.Instance.onBtnExpandClick();
+        ArkUI.Instance.currentHoldingBlueprint = 'expand';
+        ArkUI.Instance.currentBlueprintIJ = IJ.ZERO;
+        this.close();
     }
 
     close() {

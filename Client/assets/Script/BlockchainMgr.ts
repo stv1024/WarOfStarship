@@ -176,6 +176,28 @@ export default class BlockchainMgr extends cc.Component {
         });
     }
 
+    callFunction(callFunction, callArgs, value, callback){
+        try {
+            var nebPay = new NebPay();
+            var callbackUrl = BlockchainMgr.BlockchainUrl;
+            var to = ContractAddress;
+            console.log("调用钱包(", callFunction, callArgs);
+            let serialNumber = nebPay.call(to, value, callFunction, JSON.stringify(callArgs), {
+                qrcode: {
+                    showQRCode: false
+                },
+                goods: {
+                    name: "test",
+                    desc: "test goods"
+                },
+                callback: callbackUrl,
+                listener: callback
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     claimNewUser() {
         try {
             const nickname = HomeUI.Instance.lblNickname.string;

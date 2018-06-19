@@ -245,7 +245,11 @@ export default class WorldUI extends BaseUI {
     }
 
     onGotoArkClick() {
-        CvsMain.EnterUI(ArkUI);
+        if (DataMgr.myData) {
+            CvsMain.EnterUI(ArkUI);
+        } else {
+            ToastPanel.Toast('观察模式无法进入星舰界面');
+        }
     }
 
     onCenterBtnClick() {

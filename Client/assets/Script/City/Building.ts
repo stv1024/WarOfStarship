@@ -1,5 +1,5 @@
-import { BuildingInfo, BuildingData, DataMgr } from "./DataMgr";
-import ArkUI from "./ArkUI";
+import { BuildingInfo, BuildingData, DataMgr } from "../DataMgr";
+import ArkUI from "../ArkUI";
 import { IJ } from "../DataMgr";
 
 const { ccclass, property } = cc._decorator;
@@ -13,6 +13,8 @@ export default class Building extends cc.Component {
 
     @property(cc.Label)
     lblName: cc.Label = null;
+    @property(cc.Label)
+    lblLv: cc.Label = null;
 
     onClick() {
         ArkUI.Instance.selectBuilding(this);
@@ -22,6 +24,9 @@ export default class Building extends cc.Component {
         this.info = info;
         this.data = data;
         if (this.lblName) this.lblName.string = info.Name;
-        this.node.setContentSize(info.Length * 100, info.Width * 100);
+        if (this.lblLv) this.lblLv.string = 'Lv. ' + data.lv;
+        this.refresh();
     }
+
+    refresh() { }
 }

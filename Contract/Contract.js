@@ -26,7 +26,7 @@ let User = function (jsonStr) {
         this.rechargeOnExpand = new BigNumber(0);
         this.locationData = locData;
         this.expandMap = {
-            //"-3,2": true
+            //"-3,2": {order: 23//第几次扩建的}
         };
         this.buildingMap = {
             //"-3,2":{id:"ironcoll", lv:2, recoverTime:10302019313, justBuildOrUpgrade: true}
@@ -288,8 +288,8 @@ GameContract.prototype = {
         if (totalRechargeOnExpand < totallyNeed) {
             throw new Error("Expand recharge NOT ENOUGH. Totally need " + totallyNeed + ", now " + totalRechargeOnExpand);
         }
+        user.expandMap[i + ',' + j] = { order: user.expandCnt };
         user.expandCnt += 1;
-        user.expandMap[i + ',' + j] = true;
 
         this.allUsers.set(userAddress, user);
         return {
@@ -759,8 +759,8 @@ GameContract.prototype = {
         let starInfo = {};
         starInfo.x = x;
         starInfo.y = y;
-        starInfo.ironAbundance = (1 - b) * c;//per hour
-        starInfo.energyAbundance = (1 - b) * d;//per hour
+        starInfo.ironAbundance = (1 - b) * c;
+        starInfo.energyAbundance = (1 - b) * d;
         return starInfo;
     },
     APHash1: function (str) {
