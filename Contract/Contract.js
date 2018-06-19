@@ -29,7 +29,7 @@ let User = function (jsonStr) {
             //"-3,2": true
         };
         this.buildingMap = {
-            //"-3,2":{id:"ironcoll", lv:2}
+            //"-3,2":{id:"ironcoll", lv:2, recoverTime:10302019313, justBuildOrUpgrade: true}
         };
         this.cargoData = {
             energy: 1000000,
@@ -158,7 +158,7 @@ GameContract.prototype = {
         // this.allBuildingInfos = {};
         this.allIslands = [];
     },
-    get_map_info: function () {
+    getMapInfo: function () {
         let allUsers = this.allUsers;
         let users = this.allUserList.map(function (address) {
             return allUsers.get(address);
@@ -175,19 +175,13 @@ GameContract.prototype = {
             }
         };
     },
-    get_user_list: function () {
-        return {
-            "success": true,
-            "result_data": this.allUserList
-        };
+    getUserList: function () {
+        return this.allUserList;
     },
-    get_user: function (address) {
-        return {
-            "success": true,
-            "result_data": this.allUsers.get(address)
-        };
+    getUser: function (address) {
+        return this.allUsers.get(address);
     },
-    claim_new_user: function (nickname, country) {
+    claimNewUser: function (nickname, country) {
         if (nickname.length > 100) {
             throw new Error("Nickname is too long.");
         }
@@ -231,7 +225,7 @@ GameContract.prototype = {
         locData.speed = this.shipSpeed;
         locData.destinationX = destinationX;
         locData.destinationY = destinationY;
-        let energyCost = this._getSailEnergyCost(user);
+        let energyCost = this.getSailEnergyCost(user);
         if (user.cargoData.energy < energyCost) {
             throw new Error("User energy NOT enough.");
         }
@@ -324,7 +318,8 @@ GameContract.prototype = {
             throw new Error("Build Failed. Iron NOT ENOUGH." + user.cargoData.iron + "<" + info.IronCost);
         }
         //build!
-        user.buildingMap[i + ',' + j] = { id: buildingId, lv: 0 };
+        let curTime = (new Date()).valueOf();
+        user.buildingMap[i + ',' + j] = { id: buildingId, lv: 0, recoverTime: curTime + info.MaxCD / 4, justBuildOrUpgrade: true };
         user.cargoData.iron -= info.IronCost;
 
         this.allUsers.set(userAddress, user);
@@ -364,6 +359,12 @@ GameContract.prototype = {
         user.buildingMap[i + ',' + j].lv += 1;
         user.cargoData.iron -= ironCost;
 
+        let cdMulti = this.allBuildingInfos['_upgradeRate'].MaxCD;
+        let maxCD = info.MaxCD * Math.pow(cdMulti, curLv + 1);
+
+        user.buildingMap[i + ',' + j].recoverTime = curTime + maxCD / 4;
+        user.buildingMap[i + ',' + j].justBuildOrUpgrade = true;
+
         this.allUsers.set(userAddress, user);
         return {
             "success": true,
@@ -393,6 +394,67 @@ GameContract.prototype = {
             user.cargoData.iron += ironCost / 2;
         }
         user.buildingMap[i + ',' + j] = null;
+
+        this.allUsers.set(userAddress, user);
+        return {
+            "success": true,
+            "result_data": user,
+            "newBuilding": [i, j, buildingId]
+        }
+    },
+    produce: function (i, j, amount) {
+        if (amount != Math.floor(amount)) {
+            throw new Error("amount must be Integer." + amount);
+        }
+        let userAddress = Blockchain.transaction.from;
+        let user = this.allUsers.get(userAddress);
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        this._recalcUser(user);
+        let building = user.buildingMap[i + ',' + j];
+        if (!building) {
+            throw new Error("Building NOT FOUND." + i + ',' + j);
+        }
+        let curTime = (new Date()).valueOf();
+        if (building.recoverTime < curTime) {
+            throw new Error("Production is still in Cooldown." + i + ',' + j + " recoverTime:" + building.recoverTime);
+        }
+
+        //check input cargo!
+        let info = this.getBuildingInfo(building.id);
+        let out0 = info['Out0'];
+        let in0 = info['In0'];
+        let in0Amount = info['In0Amt'] * amount;
+        let in1 = info['In1'];
+        let in1Amount = info['In1Amt'] * amount;
+        if (!user.cargoData[in0] || user.cargoData[in0] < in0Amount) {
+            throw new Error("Input0 cargo NOT ENOUGH." + user.cargoData[in0]);
+        }
+        if (!user.cargoData[in1] || user.cargoData[in1] < in1Amount) {
+            throw new Error("Input1 cargo NOT ENOUGH." + user.cargoData[in1]);
+        }
+
+        //produce!
+        user.cargoData[in0] -= in0Amount;
+        user.cargoData[in1] -= in1Amount;
+        user.cargoData[out0] += amount;
+
+        //check MaxCD
+        let cdPerUnit = amount * this.getBuildingInfoItemWithLv(building.id, 'CDPerUnit', building.lv);
+        let cd = amount * cdPerUnit;
+        let maxCD = this.getBuildingInfoItemWithLv(building.id, 'MaxCD', building.lv);
+        if (cd > maxCD) {
+            throw new Error("Amout TOO MUCH." + amount + " should < " + (maxCD / cdPerUnit));
+        }
+        //check Warehouse
+        let warehouseCap = this.getUserWarehouseCap(userAddress, out0);
+        if (user.cargoData[out0] > warehouseCap) {
+            throw new Error("Warehouse Capacity NOT ENOUGH." + user.cargoData[out0] + " should <= " + warehouseCap);
+        }
+
+        building.recoverTime = curTime + cd;
+        building.justBuildOrUpgrade = null;
 
         this.allUsers.set(userAddress, user);
         return {
@@ -478,7 +540,7 @@ GameContract.prototype = {
             };
         }
     },
-    _getSailEnergyCost: function (user) {
+    getSailEnergyCost: function (user) {
         let locData = user.locationData;
         if (locData.destinationX === null || locData.destinationY === null) return 0;
         let dX = locData.destinationX - locData.lastLocationX;
@@ -521,11 +583,17 @@ GameContract.prototype = {
         } else if (user.state == 1) {
             //collecting
             if (user.collectingStarIndex) {
-
+                let star = this.getStarInfo(user.collectingStarIndex);
+                let collectingHours = (curTime - user.lastCalcTime) / 3600000;
+                let collectedIron = star.ironAbundance * this.getUserCollectorRate(user.address, 'ironcoll') * collectingHours;
+                let collectedEnergy = star.energyAbundance * this.getUserCollectorRate(user.address, 'energycoll') * collectingHours;
+                user.cargoData.iron += collectedIron;
+                user.cargoData.energy += collectedEnergy;
             }
         }
+        user.lastCalcTime = curTime;
 
-        //building-cargo
+        this.allUsers.set(user.address, user);
     },
     _battle: function (bb1, cc1, dd1, bb2, cc2, dd2) { /*策划设定*/
         let c1 = 20; /*攻击方坦克攻击*/
@@ -596,7 +664,7 @@ GameContract.prototype = {
             "left": [bb, cc, dd]
         }
     },
-    collect_island_money: function (islandId) {
+    collectIslandMoney: function (islandId) {
         let isLand = this.allIslands.get(islandId);
         let userAddress = Blockchain.transaction.from;
         if (isLand === null || isLand.occupant !== userAddress) {
@@ -609,18 +677,17 @@ GameContract.prototype = {
             "result_data": mineMoney
         };
     },
-    _collect_island_money_proc: function (isLand) {
+    _collect_island_money_proc: function (island) {
         let curTs = (new Date()).valueOf();
-        let hoursDelta = (new BigNumber(curTs - isLand.lastMineTime)).div(1000 * 3600);
-        let leftNas = isLand.money.times(Math.exp(isLand.miningRate.times(hoursDelta).negated()).toString()).trunc();
-        let MiningNas = isLand.money.minus(leftNas);
+        let hoursDelta = (new BigNumber(curTs - island.lastMineTime)).div(1000 * 3600);
+        let collectedMoney = BigNumber.min(island.money, new BigNumber(1e18 * island.miningSpeed * hoursDelta));
+        island.money = island.money.minus(collectedMoney);
+        this.totalNas = this.totalNas.minus(collectedMoney);
+        island.lastMineTime = curTs;
+        this.allIslands.set(island.id, island);
+        this._transaction(island.occupant, collectedMoney);
 
-        isLand.money = leftNas;
-        isLand.lastMineTime = curTs;
-        this.allIslands.set(isLand.id, isLand);
-        this._transaction(isLand.occupant, MiningNas);
-
-        return MiningNas;
+        return collectedMoney;
     },
     _transaction: function (targetAddress, value) {
         var result = Blockchain.transfer(targetAddress, value);
@@ -633,41 +700,43 @@ GameContract.prototype = {
             }
         });
     },
-    sponsor: function (islandId, sponsorName, link) {
-        let isLand = this.allIslands.get(islandId);
+    sponsor: function (islandId, sponsorName, link, miningSpeed) {
+        let island = this.allIslands.get(islandId);
         let value = Blockchain.transaction.value;
         let userAddress = Blockchain.transaction.from;
         let res;
-        if (isLand === null) {
+        if (island === null) {
             throw new Error("Error island id.");
         }
-        this.totalNas = value.plus(this.totalNas);
+        if (miningSpeed <= 0) {
+            throw new Error("miningSpeed must > 0." + miningSpeed);
+        }
         this._collect_island_money_proc(islandId);
-        if (value >= isLand.money.times(1.2) || isLand.sponsor === userAddress) {
-            isLand.sponsor = userAddress;
-            isLand.sponsorName = sponsorName;
-            isLand.sponsorLink = link;
-            res = {
-                "success": true
-            };
+        if (island.sponsor !== userAddress && value < island.money.times(1.2)) {
+            throw new Error("value must > current money * 1.2. value:" + value + ", island.money:" + island.money);
+        }
+        if (island.sponsor !== userAddress) {
+            //return money back
+            this._transaction(island.sponsor, island.money);
+            this.totalNas = this.totalNas.minus(island.money);
+            island.sponsor = userAddress;
+            island.money = value;
         } else {
-            res = {
-                "success": false,
-                "result_data": "No enough money."
-            };
+            island.money = value.plus(island.money);
         }
-        isLand.money = value.plus(isLand.money);
-        this.allIslands.set(islandId, isLand);
+        this.totalNas = value.plus(this.totalNas);
+        island.sponsorName = sponsorName;
+        island.sponsorLink = link;
+        island.mineSpeed = miningSpeed;
 
-        return res;
+        this.allIslands.set(islandId, island);
+
+        return {
+            "success": true,
+            "island": island
+        };;
     },
-    changeConst: function (constName, value) {
-        if (Blockchain.transaction.from !== this.adminAddress) {
-            throw new Error("Permission denied.");
-        }
-        this[constName] = value;
-    },
-    take_redundant_nas: function (targetAddress, value) {
+    takeRedundantNas: function (targetAddress, value) {
         if (Blockchain.transaction.from != this.adminAddress) {
             throw new Error("Permission denied.");
         }
@@ -675,13 +744,14 @@ GameContract.prototype = {
             throw new Error("Illegal Address.");
         }
 
+        this.totalNas = value.minus(value);
         this._transaction(targetAddress, new BigNumber(value))
     },
     getStarInfo: function (index) {
         let a = (this.APHash1(index.toFixed() + 'startheta'));
         let b = (this.APHash1(index.toFixed() + 'rhostar'));
-        let c = (this.APHash1(index.toFixed() + 'ironrate'));
-        let d = (this.APHash1(index.toFixed() + 'energyrate'));
+        let c = (this.APHash1(index.toFixed() + 'ironAbund'));
+        let d = (this.APHash1(index.toFixed() + 'energyAbund'));
         let theta = a * Math.PI * 2;
         let l = b * 5000;
         let x = Math.cos(theta) * l;
@@ -689,8 +759,8 @@ GameContract.prototype = {
         let starInfo = {};
         starInfo.x = x;
         starInfo.y = y;
-        starInfo.ironRate = b * c * 100;
-        starInfo.energyRate = b * d * 100;
+        starInfo.ironAbundance = (1 - b) * c;//per hour
+        starInfo.energyAbundance = (1 - b) * d;//per hour
         return starInfo;
     },
     APHash1: function (str) {
@@ -719,6 +789,52 @@ GameContract.prototype = {
             cost = cost.add(a.times(Math.exp(new BigNumber(0.15).times(new BigNumber(i))).toString()).trunc());
         }
         return cost;
+    },
+    getBuildingInfoItemWithLv: function (buildingId, itemName, lv) {
+        let value = this.allBuildingInfos.get(id)[itemName];
+        let multi = this.allBuildingInfos.get('_UpgradeRate')[itemName];
+        if (!isNaN(multi)) {
+            value = value * Math.pow(multi, lv);
+        }
+        return value;
+    },
+    getUserCollectorRate: function (userAddress, buildingId) {
+        let user = this.allUsers.get(userAddress);
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        let info = this.allBuildingInfos.get(buildingId);
+        let rate = 0;
+        for (let key in user.buildingMap) {
+            let bdg = user.buildingMap[key];
+            if (bdg && bdg.id === buildingId) {
+                rate += this.getBuildingInfoItemWithLv(buildingId, 'Out0Rate', bdg.lv);
+            }
+        }
+        return rate;
+    },
+    getUserWarehouseCap: function (userAddress, cargoName) {
+        let user = this.allUsers.get(userAddress);
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        let houseName = cargoName + 'house';
+        let info = this.allBuildingInfos.get(houseName);
+        let cap = 0;
+        for (let key in user.buildingMap) {
+            let bdg = user.buildingMap[key];
+            if (bdg && bdg.id === houseName) {
+                cap += this.getBuildingInfoItemWithLv(houseName, 'Capacity', bdg.lv);
+            }
+        }
+        return cap;
+    },
+    //Admin
+    changeConst: function (constName, value) {
+        if (Blockchain.transaction.from !== this.adminAddress) {
+            throw new Error("Permission denied.");
+        }
+        this[constName] = value;
     },
     setBuildingInfo: function (infoArray) {
         if (Blockchain.transaction.from != this.adminAddress) {
