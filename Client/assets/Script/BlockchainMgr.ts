@@ -83,7 +83,7 @@ export default class BlockchainMgr extends cc.Component {
             var nonce = "0"
             var gas_price = "1000000"
             var gas_limit = "2000000"
-            var callFunction = "get_user";
+            var callFunction = "getUser";
             var contract = {
                 "function": callFunction,
                 "args": JSON.stringify([BlockchainMgr.WalletAddress])
@@ -108,7 +108,7 @@ export default class BlockchainMgr extends cc.Component {
             var nonce = "0"
             var gas_price = "1000000"
             var gas_limit = "2000000"
-            var callFunction = "get_map_info";
+            var callFunction = "getMapInfo";
             var contract = {
                 "function": callFunction,
                 "args": "[]"
@@ -186,7 +186,7 @@ export default class BlockchainMgr extends cc.Component {
             var callbackUrl = BlockchainMgr.BlockchainUrl;
             var value = 0;
             var to = ContractAddress;
-            var callFunction = 'claim_new_user';
+            var callFunction = 'claimNewUser';
             console.log("调用钱包claim_new_user(", nickname, country);
             var callArgs = '["' + nickname + '","' + country + '"]';
             serialNumber = nebPay.call(to, value, callFunction, callArgs, {
@@ -261,7 +261,7 @@ export default class BlockchainMgr extends cc.Component {
     }
 
 
-    expand(count: number, valueNas: number) {
+    expand(i, j, valueNas: number) {
         try {
 
             var nebPay = new NebPay();
@@ -269,9 +269,10 @@ export default class BlockchainMgr extends cc.Component {
             var callbackUrl = BlockchainMgr.BlockchainUrl;
             var to = ContractAddress;
             var value = Math.ceil(valueNas * 1e6) / 1e6;
-            var callFunction = 'recharge_expand';
-            console.log("调用钱包recharge_expand(valueNas", valueNas, 'value', value);
-            serialNumber = nebPay.call(to, value, callFunction, null, {
+            var callFunction = 'expand';
+            var callArgs = JSON.stringify([i, j]);
+            console.log("调用钱包expand(" + i + ',' + j + ", valueNas", valueNas, 'value', value);
+            serialNumber = nebPay.call(to, value, callFunction, callArgs, {
                 qrcode: {
                     showQRCode: false
                 },
@@ -287,7 +288,7 @@ export default class BlockchainMgr extends cc.Component {
         }
     }
     expandCallback(resp) {
-        console.log("expandArkCallback: ", resp);
+        console.log("expandCallback: ", resp);
         if (resp.toString().substr(0, 5) != 'Error') {
             DialogPanel.PopupWith2Buttons('扩建计划已启动，请稍候',
                 '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
@@ -307,7 +308,7 @@ export default class BlockchainMgr extends cc.Component {
             var callbackUrl = BlockchainMgr.BlockchainUrl;
             var to = ContractAddress;
             var value = 0
-            var callFunction = 'attack_island';
+            var callFunction = 'attackIsland';
             console.log("调用钱包attack_island(", islandId, tank, chopper, ship);
             var callArgs = JSON.stringify([islandId, tank, chopper, ship]);
             serialNumber = nebPay.call(to, value, callFunction, callArgs, {
@@ -350,8 +351,8 @@ export default class BlockchainMgr extends cc.Component {
             var callbackUrl = BlockchainMgr.BlockchainUrl;
             var to = ContractAddress;
             var value = 0
-            var callFunction = 'collect_island_money';
-            console.log("调用钱包collect_island_money(", islandId, );
+            var callFunction = 'collectIslandMoney';
+            console.log("调用钱包collectIslandMoney(", islandId, );
             var callArgs = JSON.stringify([islandId]);
             serialNumber = nebPay.call(to, value, callFunction, callArgs, {
                 qrcode: {

@@ -1,11 +1,13 @@
 import { BuildingInfo, BuildingData, DataMgr } from "./DataMgr";
 import ArkUI from "./ArkUI";
+import { IJ } from "../DataMgr";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class Building extends cc.Component {
 
+    ij: IJ;
     info: BuildingInfo;
     data: BuildingData;
 

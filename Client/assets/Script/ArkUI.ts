@@ -3,7 +3,7 @@ import BaseUI from "./BaseUI";
 import WorldUI from "./WorldUI";
 import { DataMgr, BuildingInfo, IJ, BuildingData } from "./DataMgr";
 import BuildPanel from "./BuildPanel";
-import Building from "./Building";
+import Building from "./City/Building";
 import TechPanel from "./TechPanel";
 import DialogPanel from "./DialogPanel";
 import BuildingInfoPanel from "./UI/BuildingInfoPanel";
@@ -33,22 +33,20 @@ export default class ArkUI extends BaseUI {
         this.panPad.on(cc.Node.EventType.MOUSE_WHEEL, this.onMouseWheel, this);
         this.panPad.on(cc.Node.EventType.TOUCH_END, this.deselectBuilding, this);
 
-        this.cells = [];
-        for (let i = -50; i <= 50; i++) {
-            this.cells[i] = [];
-            for (let j = -50; j < 50; j++) {
-                this.cells[i][j] = new Cell();
-            }
-        }
+        // this.cells = [];
+        // for (let i = -200; i <= -1; i++) {
+        //     this.cells[i] = [];
+        //     for (let j = -100; j < 100; j++) {
+        //         this.cells[i][j] = new Cell();
+        //     }
+        // }
 
         this.blueprint.on(cc.Node.EventType.TOUCH_MOVE, this.dragBlueprint.bind(this));
 
-        this.workshopTemplate.active = false;
-        this.roadTemplate.active = false;
-        this.houseTemplate.active = false;
-        this.launchingsiloTemplate.active = false;
-
-        // this.node.getChildByName('GrpBuildInfo').getChildByName('DeselectPad').on(cc.Node.EventType.TOUCH_START, ()=>{ArkUI.Instance.deselectBuilding();});
+        this.floorTemplate.active = false;
+        this.producerTemplate.active = false;
+        this.collectorTemplate.active = false;
+        this.warehouseTemplate.active = false;
     }
 
     @property(cc.Node)
@@ -61,8 +59,6 @@ export default class ArkUI extends BaseUI {
     @property(cc.Node)
     cargoLabelTemplate: cc.Node = null;
     cargoLabels = {};
-
-    cells: Cell[][];
 
     @property(cc.Node)
     panPad: cc.Node = null;
@@ -83,6 +79,7 @@ export default class ArkUI extends BaseUI {
     }
 
     onEnable() {
+        this.refreshBuildingData();
         this.refreshZoom();
 
         let myData = DataMgr.myData;
@@ -113,10 +110,6 @@ export default class ArkUI extends BaseUI {
     }
 
     update(dt: number) {
-        if (DataMgr.changed) {
-            this.refreshData();
-            DataMgr.changed = false;
-        }
 
         for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
             const cargoInfo = DataMgr.CargoConfig[i];
@@ -151,19 +144,15 @@ export default class ArkUI extends BaseUI {
         if (this.currentHoldingBlueprint) {
             this.blueprint.active = true;
             this.blueprint.position = new cc.Vec2(this.currentBlueprintIJ.i * 100 - 50, this.currentBlueprintIJ.j * 100 - 50);
-            this.blueprint.setContentSize(this.currentHoldingBlueprint.Length * 100, this.currentHoldingBlueprint.Width * 100);
-            let ableToBuild = true;
-            this.blueprintIndicator.clear();
-            for (let i = 0; i < this.currentHoldingBlueprint.Length; i++) {
-                for (let j = 0; j < this.currentHoldingBlueprint.Width; j++) {
-                    let cell = this.cells[this.currentBlueprintIJ.i + i][this.currentBlueprintIJ.j + j];
-                    this.blueprintIndicator.fillColor = cell.building ? cc.Color.RED : cell.isLand ? cc.Color.GREEN : cc.Color.RED;
-                    if (cell.building) ableToBuild = false;
-                    if (!cell.isLand) ableToBuild = false;
-                    this.blueprintIndicator.fillRect(i * 100, j * 100, 100, 100);
-                }
-            }
+            this.blueprint.setContentSize(100, 100);
             this.grpBuild.active = true;
+            let ableToBuild = true;
+            let key = this.currentBlueprintIJ.i + ',' + this.currentBlueprintIJ.j;
+            if (DataMgr.myData.buildingMap[key]) {
+                ableToBuild = false;
+            } else if (!DataMgr.myData.expandMap[key]) {
+                ableToBuild = false;
+            }
             this.btnConfirmBuild.interactable = ableToBuild;
         } else {
             this.blueprint.active = false;
@@ -177,7 +166,42 @@ export default class ArkUI extends BaseUI {
 
     }
 
-    refreshData() { }
+    refreshBuildingData() {
+        const buildingMap = DataMgr.myData.buildingMap;
+        for (let key in buildingMap) {
+            buildingMap[key].tmpDirty = true;
+        }
+        this.buildingContainer.children.forEach(bdgNode => {
+            let bdg = bdgNode.getComponent(Building);
+            const ij = bdg.ij;
+            const key = ij.i + ',' + ij.j;
+            const bdgOnChain = buildingMap[key];
+            if (!bdgOnChain) {
+                bdgNode.destroy();
+                return;
+            }
+            if (bdg.info.id != bdgOnChain.id) {
+                bdgNode.destroy();
+                return;
+            }
+            bdg.setInfo(bdg.info, bdgOnChain);
+            delete bdgOnChain.tmpDirty;
+        });
+        for (let key in buildingMap) {
+            if (buildingMap[key].tmpDirty) {
+                const data = buildingMap[key];
+                let info = DataMgr.getBuildingInfo(data.id);
+                let prefabName = info['Prefab'];
+                let buildingNode = cc.instantiate(this[prefabName + 'Template']);
+                buildingNode.parent = this.buildingContainer;
+                let building = buildingNode.getComponent(Building);
+                building.setInfo(info, data);
+                buildingNode.position = new cc.Vec2(data.i * 100, data.j * 100);
+                buildingNode.active = true;
+                delete buildingMap[key].tmpDirty;
+            }
+        }
+    }
 
     onGotoWorldClick() {
         this.deselectBuilding();
@@ -189,7 +213,7 @@ export default class ArkUI extends BaseUI {
         TechPanel.Hide();
     }
     onCommanderClick() {
-        
+
     }
 
     onCenterBtnClick() {
@@ -222,19 +246,21 @@ export default class ArkUI extends BaseUI {
 
     //Build
     @property(cc.Node)
-    workshopTemplate: cc.Node = null;
+    floorTemplate: cc.Node = null;
     @property(cc.Node)
-    houseTemplate: cc.Node = null;
+    floorContainer: cc.Node = null;
     @property(cc.Node)
-    roadTemplate: cc.Node = null;
+    collectorTemplate: cc.Node = null;
     @property(cc.Node)
-    launchingsiloTemplate: cc.Node = null;
+    producerTemplate: cc.Node = null;
+    @property(cc.Node)
+    warehouseTemplate: cc.Node = null;
     @property(cc.Node)
     buildingContainer: cc.Node = null;
     @property(cc.Node)
     blueprint: cc.Node = null;
-    @property(cc.Graphics)
-    blueprintIndicator: cc.Graphics = null;
+    @property(cc.Sprite)
+    blueprintIndicator: cc.Sprite = null;
     currentHoldingBlueprint: BuildingInfo = null;
     currentBlueprintIJ: IJ;
     enterBuildMode(buildingInfo: BuildingInfo) {

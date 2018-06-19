@@ -19,7 +19,7 @@ export class DataMgr {
     static energyCostPerLyExpand = 1;
 
     private static inited = false;
-    static init(){
+    static init() {
         if (this.inited) return;
         this.inited = true;
 
@@ -48,7 +48,9 @@ export class DataMgr {
         let curMoney = data.money * (isMining ? Math.exp(-data.miningRate * (Number(new Date()) - data.lastMineTime) / (1000 * 3600)) : 1);
         return curMoney;
     }
-
+    static getBuildingInfo(id: string) {
+        return DataMgr.BuildingConfig.find(info => info.id == id);
+    }
 
     static getStarInfo(index: number): StarInfo {
         let a = (this.APHash1(index.toFixed() + 'startheta'));
@@ -110,23 +112,39 @@ export class UserData {
     state = 0; //0:sailing 1:collecting
     hull = 1; //完整度
     locationData: LocationData;
+    expandMap = {
+        //"-3,2": true
+    };
+    buildingMap = {
+        //"-3,2":{id:"ironcoll", lv:2, recoverTime:10302019313, justBuildOrUpgrade: true}
+    };
     cargoData = {
+        iron: 0,
         energy: 0,
     };
 }
 export class BuildingInfo {
     id: string;
     Name: string;
-    Length: number;
-    Width: number;
-    MaxHuman;
+    Prefab: string;
+    IronCost: number;
+    Capacity;
+    In0;
+    In0Amt;
+    In1;
+    In1Amt;
+    Out0;
+    Out0Rate;
+    CDPerUnit;
+    MaxCD;
+    MaxLevel;
+    Description: string;
 }
 export class BuildingData {
     id: string;
-    ij: IJ;
-    workers: number = 0;
-
-    isWorking = false;
+    lv: number;
+    recoverTime: number;
+    justBuildOrUpgrade: boolean;
 }
 export class CargoInfo {
     id: string;
