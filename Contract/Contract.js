@@ -708,8 +708,8 @@ GameContract.prototype = {
         if (island === null) {
             throw new Error("Error island id.");
         }
-        if (miningSpeed <= 0) {
-            throw new Error("miningSpeed must > 0." + miningSpeed);
+        if (miningSpeed < 0.001) {
+            throw new Error("miningSpeed must >= 0.001NAS/h." + miningSpeed);
         }
         this._collect_island_money_proc(islandId);
         if (island.sponsor !== userAddress && value < island.money.times(1.2)) {

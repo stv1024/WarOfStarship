@@ -39,7 +39,7 @@ export class DataMgr {
         return MathUtil.lerpVec2(lastLocation, destination, t, true);
     }
 
-    static getMethaneCostOfAttack(distance: number, tankPower, chopperPower, shipPower) {
+    static getEnergyCostOfAttack(distance: number, tankPower, chopperPower, shipPower) {
         return 0.01 * distance * (tankPower + chopperPower + shipPower);
     }
 
@@ -95,7 +95,7 @@ export class DataMgr {
     static getBuildingInfoItemWithLv(buildingId, itemName, lv) {
         let value = DataMgr.getBuildingInfo(buildingId)[itemName];
         let multi = DataMgr.getBuildingInfo('_upgradeRate')[itemName];
-        if (!isNaN(multi)) {
+        if (!isNaN(multi) && multi > 0) {
             value = value * Math.pow(multi, lv);
         }
         return value;

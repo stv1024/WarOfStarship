@@ -10,6 +10,9 @@ import BuildingInfoPanel from "./UI/BuildingInfoPanel";
 import CurrencyFormatter from "./Utils/CurrencyFormatter";
 import BlockchainMgr from "./BlockchainMgr";
 import ToastPanel from "./UI/ToastPanel";
+import ProductionPanel from "./UI/ProductionPanel";
+import CollectorBuilding from "./City/CollectorBuilding";
+import ProducerBuilding from "./City/ProducerBuilding";
 
 const { ccclass, property } = cc._decorator;
 
@@ -80,8 +83,7 @@ export default class ArkUI extends BaseUI {
     }
 
     onEnable() {
-        this.refreshBuildingData();
-        this.refreshZoom();
+        this.refreshAll();
 
         let myData = DataMgr.myData;
         // for (let i = -Math.floor(myData.arkSize / 2); i < myData.arkSize / 2; i++) {
@@ -171,10 +173,16 @@ export default class ArkUI extends BaseUI {
         }
         if (this.selectedBuilding) {
             this.grpBuildingInfo.active = true;
+            this.nodProduceButton.active = (this.selectedBuilding.getComponent(ProducerBuilding) != null);
         } else {
             this.grpBuildingInfo.active = false;
         }
 
+    }
+
+    refreshAll() {
+        this.refreshBuildingData();
+        this.refreshZoom();
     }
 
     refreshBuildingData() {
@@ -322,7 +330,7 @@ export default class ArkUI extends BaseUI {
     onBtnConfirmBuildClick() {
         if (this.currentHoldingBlueprint == 'expand') {
             //确定扩建
-            BlockchainMgr.Instance.callFunction('expand', [this.currentBlueprintIJ.i, this.currentBlueprintIJ.j], DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1),
+            BlockchainMgr.Instance.callFunction('expand', [this.currentBlueprintIJ.i, this.currentBlueprintIJ.j], DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1) + 1e-5,
                 (resp) => {
                     if (resp.toString().substr(0, 5) != 'Error') {
                         DialogPanel.PopupWith2Buttons('正在递交扩建计划',
@@ -353,26 +361,13 @@ export default class ArkUI extends BaseUI {
     onBtnCancelBuildClick() {
         this.currentHoldingBlueprint = null;
     }
-    createBuilding(blueprint: BuildingInfo, data: BuildingData) {
-        let prefabName = blueprint['prefab'];
-        let buildingNode = cc.instantiate(this[prefabName + 'Template']);
-        buildingNode.parent = this.buildingContainer;
-        let building = buildingNode.getComponent(Building);
-        building.setInfo(blueprint, data);
-        buildingNode.position = new cc.Vec2(data.ij.i * 100 - 50, data.ij.j * 100 - 50);
-        buildingNode.active = true;
-        for (let i = 0; i < blueprint.Length; i++) {
-            for (let j = 0; j < blueprint.Width; j++) {
-                let cell = this.cells[data.ij.i + i][data.ij.j + j];
-                cell.building = building;
-            }
-        }
-    }
 
     //建筑信息
     selectedBuilding: Building = null;
     @property(cc.Node)
     grpBuildingInfo: cc.Node = null;
+    @property(cc.Node)
+    nodProduceButton: cc.Node = null;
     selectBuilding(building: Building) {
         console.log('选中建筑', building);
         this.selectedBuilding = building;
@@ -388,37 +383,39 @@ export default class ArkUI extends BaseUI {
                 + '\n建筑材料不予返还',
                 '取消', null,
                 '拆除', () => {
-                    self.demolishBuilding(self.selectedBuilding);
+                    let ij = JSON.parse('[' + this.selectedBuilding.node.name + ']');
+                    BlockchainMgr.Instance.callFunction('demolish', ij, 0,
+                        (resp) => {
+                            if (resp.toString().substr(0, 5) != 'Error') {
+                                DialogPanel.PopupWith2Buttons('正在递交拆除计划',
+                                    '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                        window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                                    }, '确定', null);
+                            } else {
+                                ToastPanel.Toast('交易失败:' + resp);
+                            }
+                        }
+                    );
                     self.deselectBuilding();
                 });
-        }
-    }
-    demolishBuilding(building: Building) {
-        if (!building) return;
-        //拆除建筑
-        console.log('拆除建筑');
-        let index = DataMgr.myBuildingData.findIndex(data => data == building.data);
-        if (index >= 0) {
-            //施放工人
-            let workers = building.data.workers;
-            DataMgr.myBuildingData.splice(index, 1);
-            DataMgr.idleWorkers += workers;
-            //施放土地
-            const info = DataMgr.BuildingConfig.find(i => i.id == building.data.id);
-            console.log('info.Length', info.Length);
-            for (let i = 0; i < info.Length; i++) {
-                for (let j = 0; j < info.Width; j++) {
-                    console.log('cells', building.data.ij.i + i, building.data.ij.j + j);
-                    this.cells[building.data.ij.i + i][building.data.ij.j + j].building = null;
-                }
-            }
-            building.node.destroy();
         }
     }
     onBuildingInfoBtnClick() {
         if (this.selectedBuilding) {
             BuildingInfoPanel.Show(this.selectedBuilding.info);
             this.deselectBuilding();
+        }
+    }
+
+    //生产
+    onProduceBtnClick() {
+        let data = DataMgr.myData.buildingMap[this.selectedBuilding.node.name];
+        let curTime = Number(new Date());
+        if (curTime >= data.recoverTime) {
+            ProductionPanel.Instance.node.active = true;
+            ProductionPanel.Instance.setAndRefresh(this.selectedBuilding, DataMgr.myData.buildingMap[this.selectedBuilding.node.name]);
+        } else {
+            ToastPanel.Toast('生产设施尚未冷却');
         }
     }
 }

@@ -7,8 +7,8 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class ProducerBuilding extends Building {
 
-    @property(cc.Label)
-    lblConsumption: cc.Label = null;
+    // @property(cc.Label)
+    // lblConsumption: cc.Label = null;
     @property(cc.Label)
     lblCd: cc.Label = null;
 
@@ -23,17 +23,17 @@ export default class ProducerBuilding extends Building {
         }
     }
 
-    refresh() {
-        let info = this.info;
-        let strInfoLines = [];
-        for (let i = 0; i < 2; i++) {
-            const inid = info['In' + i];
-            if (inid && inid.length > 0) {
-                const inAmt = info['In' + i + 'Amt'];
-                const cargoInfo = DataMgr.getCargoInfo(inid);
-                strInfoLines.push(`${inAmt}${cargoInfo.Name}`);
-            }
-        }
-        this.lblConsumption.string = strInfoLines.join('\n');
-    }
+    // refresh() {
+    //     let info = this.info;
+    //     let strInfoLines = [];
+    //     for (let i = 0; i < 2; i++) {
+    //         const inid = info['In' + i];
+    //         if (inid && inid.length > 0) {
+    //             const inAmt = info['In' + i + 'Amt'];
+    //             const cargoInfo = DataMgr.getCargoInfo(inid);
+    //             strInfoLines.push(`${inAmt}${cargoInfo.Name}`);
+    //         }
+    //     }
+    //     this.lblConsumption.string = strInfoLines.join('\n');
+    // }
 }

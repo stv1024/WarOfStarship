@@ -123,7 +123,7 @@ export default class AttackIslandPanel extends cc.Component {
 
     refreshMethaneCost() {
         const distance = this.island.node.position.sub(new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y)).mag();
-        const costMethane = DataMgr.getMethaneCostOfAttack(distance,
+        const costMethane = DataMgr.getEnergyCostOfAttack(distance,
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
@@ -136,7 +136,7 @@ export default class AttackIslandPanel extends cc.Component {
         console.log('准备攻占资源岛', this.island);
 
         const distance = this.island.node.position.sub(new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y)).mag();
-        const costMethane = DataMgr.getMethaneCostOfAttack(distance,
+        const costMethane = DataMgr.getEnergyCostOfAttack(distance,
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
