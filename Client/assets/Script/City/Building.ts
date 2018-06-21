@@ -24,7 +24,7 @@ export default class Building extends cc.Component {
         this.info = info;
         this.data = data;
         if (this.lblName) this.lblName.string = info.Name;
-        if (this.lblLv) this.lblLv.string = 'Lv. ' + data.lv;
+        if (this.lblLv) this.lblLv.string = 'Lv. ' + (data.lv + 1);
         this.refresh();
     }
 

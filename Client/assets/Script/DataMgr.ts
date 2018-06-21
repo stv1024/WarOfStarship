@@ -100,6 +100,19 @@ export class DataMgr {
         }
         return value;
     }
+    
+    static getUserWarehouseCap (cargoName) {
+        let houseName = cargoName + 'house';
+        let user = DataMgr.myData;
+        let cap = 0;
+        for (let key in user.buildingMap) {
+            let bdg = user.buildingMap[key];
+            if (bdg && bdg.id === houseName) {
+                cap += this.getBuildingInfoItemWithLv(houseName, 'Capacity', bdg.lv);
+            }
+        }
+        return cap;
+    }
 }
 
 export class StarInfo {
