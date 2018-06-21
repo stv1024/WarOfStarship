@@ -23,7 +23,7 @@ export class DataMgr {
         if (this.inited) return;
         this.inited = true;
 
-        for (let index = 0; index < 1000; index++) {
+        for (let index = 0; index < 300; index++) {
             let starInfo = DataMgr.getStarInfo(index);
             this.allStars.push(starInfo);
         }

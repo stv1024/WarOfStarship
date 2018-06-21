@@ -407,6 +407,36 @@ export default class ArkUI extends BaseUI {
         }
     }
 
+    //升级
+    onUpgradeBtnClick() {
+        let self = ArkUI.Instance;
+        if (this.selectedBuilding) {
+            let ironCost = DataMgr.getBuildingInfoItemWithLv(this.selectedBuilding.data.id, 'IronCost', this.selectedBuilding.data.lv + 1);
+            DialogPanel.PopupWith2Buttons('升级' + self.selectedBuilding.info.Name + "到Lv" + (this.selectedBuilding.data.lv + 1),
+                "需要" + ironCost + '铁',
+                '取消', null,
+                '升级', () => {
+                    if (DataMgr.myData.cargoData.iron < ironCost) {
+                        ToastPanel.Toast("铁不足");
+                        return;
+                    }
+                    let ij = JSON.parse('[' + this.selectedBuilding.node.name + ']');
+                    BlockchainMgr.Instance.callFunction('upgradeBuilding', ij, 0,
+                        (resp) => {
+                            if (resp.toString().substr(0, 5) != 'Error') {
+                                DialogPanel.PopupWith2Buttons('正在递交升级计划',
+                                    '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                        window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                                    }, '确定', null);
+                            } else {
+                                ToastPanel.Toast('交易失败:' + resp);
+                            }
+                        }
+                    );
+                    self.deselectBuilding();
+                });
+        }
+    }
     //生产
     onProduceBtnClick() {
         let data = DataMgr.myData.buildingMap[this.selectedBuilding.node.name];

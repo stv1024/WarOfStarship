@@ -69,6 +69,8 @@ export default class WorldUI extends BaseUI {
     @property(cc.Node)
     selectFrame: cc.Node = null;
     @property(cc.Button)
+    btnObjectInfo: cc.Button = null;
+    @property(cc.Button)
     btnSponsorLink: cc.Button = null;
     @property(cc.Label)
     lblAttackButton: cc.Label = null;
@@ -90,9 +92,13 @@ export default class WorldUI extends BaseUI {
             let starNode = cc.instantiate(this.starTemplate);
             starNode.parent = this.starContainer;
             starNode.position = new cc.Vec2(starInfo.x, starInfo.y);
-            starNode.getComponent(Star).setAndRefresh(starInfo);
+            let star = starNode.getComponent(Star);
+            star.setAndRefresh(starInfo);
             starNode.active = true;
+
+            star.btn.on(cc.Node.EventType.TOUCH_MOVE, this.onPanPadTouchMove, this);
         }
+        this.starTemplate.active = false;
     }
     onEnable() {
         this.editSailDestinationMode = false;
@@ -193,9 +199,13 @@ export default class WorldUI extends BaseUI {
             this.selectFrame.position = this.selectedObjectNode.position;
             this.selectFrame.setContentSize(this.selectedObjectNode.width * 2, this.selectedObjectNode.height * 2);
             let arkIW = this.selectedObjectNode.getComponent(ArkInWorld);
+            let star = this.selectedObjectNode.getComponent(Star);
             let speArk = this.selectedObjectNode.getComponent(SpecialArk);
             let island = this.selectedObjectNode.getComponent(Island);
-            if (arkIW) {
+            if (star) {
+                this.grpSelectSpeArk.active = false;
+                this.grpSelectObject.active = true;
+            } else if (arkIW) {
                 this.grpSelectSpeArk.active = false;
                 this.grpSelectObject.active = false;
             } else if (island) {
@@ -302,9 +312,9 @@ export default class WorldUI extends BaseUI {
     @property(cc.Label)
     lblAsideSelectFrame: cc.Label = null;
     selectedObjectNode: cc.Node;
-    selectArk(arkNode: cc.Node) {
+    selectObject(node: cc.Node) {
         if (this.editSailDestinationMode) return;
-        this.selectedObjectNode = arkNode;
+        this.selectedObjectNode = node;
     }
     selectSpecialArk(arkNode: cc.Node) {
         if (this.editSailDestinationMode) return;
@@ -324,6 +334,22 @@ export default class WorldUI extends BaseUI {
             let dist = pos.sub(speArk.location).mag();
             speArk.showInfo(dist);
         }
+    }
+    onBtnInfoClick() {
+        if (!this.selectedObjectNode) return;
+        if (this.selectedObjectNode.getComponent(Star)) {
+            this.onBtnAttackStarClick();
+        } else if (this.selectedObjectNode.getComponent(ArkInWorld)) {
+
+        } else if (this.selectedObjectNode.getComponent(Island)) {
+            this.onBtnAttackIslandClick();
+        }
+    }
+    onBtnAttackStarClick() {
+        const star = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Star) : null;
+        if (!star) return;
+        // AttackIslandPanel.Instance.node.active = true;
+        // AttackIslandPanel.Instance.setAndRefresh(star);
     }
     onBtnAttackIslandClick() {
         const island = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Island) : null;

@@ -47,6 +47,6 @@ export default class ArkInWorld extends cc.Component {
     }
 
     onClick() {
-        WorldUI.Instance.selectArk(this.node);
+        WorldUI.Instance.selectObject(this.node);
     }
 }
