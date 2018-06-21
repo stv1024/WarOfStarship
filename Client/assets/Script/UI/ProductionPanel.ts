@@ -102,6 +102,20 @@ export default class ProductionPanel extends cc.Component {
             return;
         }
 
+
+        //check Warehouse
+        let user = DataMgr.myData;
+        let info = DataMgr.getBuildingInfo(this.buildingData.id);
+        let out0 = info['Out0'];
+        ;
+        let warehouseCap = DataMgr.getUserWarehouseCap(out0);
+        console.log('user.cargoData[out0]', user.cargoData[out0], count, warehouseCap)
+        if (user.cargoData[out0] + count > warehouseCap) {//TODO:user.cargoData[out0] == undefined
+            ToastPanel.Toast('仓库容量不够');
+            return;
+        }
+
+
         let ij = JSON.parse('[' + this.building.node.name + ']');
         BlockchainMgr.Instance.callFunction('produce', [ij[0], ij[1], count], 0,
             (resp) => {

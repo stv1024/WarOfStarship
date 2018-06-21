@@ -7,6 +7,7 @@ import ArkUI from "./ArkUI";
 import CvsMain from "./CvsMain";
 import HomeUI from "./HomeUI";
 import AttackIslandPanel from "./UI/AttackIslandPanel";
+import MainCtrl from "./MainCtrl";
 
 const { ccclass, property } = cc._decorator;
 
@@ -14,7 +15,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1yHugfTsokfMBPLK9J22C7nMjNbAvHwCqf'; //
+export const ContractAddress = 'n1tyrXfTRUFWeFzFVfY27yJqhNF3ac7LfEP'; //
 export const EncKey = 37234;
 
 @ccclass
@@ -146,9 +147,10 @@ export default class BlockchainMgr extends cc.Component {
 
     onGetMyData(resp) {
         console.log('onGetMyData', resp);
-        let user = JSON.parse(resp.result).result_data;
+        let user = JSON.parse(resp.result);
 
         DataMgr.myData = user;
+        user.ticks = MainCtrl.Ticks;
     }
 
     onGetAllMapData(resp) {
@@ -176,12 +178,13 @@ export default class BlockchainMgr extends cc.Component {
         });
     }
 
-    callFunction(callFunction, callArgs, value, callback){
+    callFunction(callFunction, callArgs, value, callback) {
         try {
+            value = Math.ceil(value * 1e10) / 1e10;
+            console.log("调用钱包(", callFunction, callArgs, value);
             var nebPay = new NebPay();
             var callbackUrl = BlockchainMgr.BlockchainUrl;
             var to = ContractAddress;
-            console.log("调用钱包(", callFunction, callArgs);
             let serialNumber = nebPay.call(to, value, callFunction, JSON.stringify(callArgs), {
                 qrcode: {
                     showQRCode: false

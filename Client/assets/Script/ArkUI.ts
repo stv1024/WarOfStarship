@@ -112,7 +112,14 @@ export default class ArkUI extends BaseUI {
         this.arkMap.scale = this.zoomScale;
     }
 
+    _lastRefreshTicks = -1;
     update(dt: number) {
+
+        //刷新建筑
+        if (DataMgr.myData['ticks'] > this._lastRefreshTicks) {
+            this._lastRefreshTicks = DataMgr.myData['ticks'];
+            this.refreshAll();
+        }
 
         for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
             const cargoInfo = DataMgr.CargoConfig[i];
@@ -147,18 +154,30 @@ export default class ArkUI extends BaseUI {
         if (this.currentHoldingBlueprint) {
             this.blueprint.active = true;
             this.blueprint.position = new cc.Vec2(this.currentBlueprintIJ.i * 100, this.currentBlueprintIJ.j * 100);
-            this.blueprint.setContentSize(100, 100);
             let ableToBuild = true;
             this.grpBuild.active = true;
-            let key = this.currentBlueprintIJ.i + ',' + this.currentBlueprintIJ.j;
             if (this.currentHoldingBlueprint == 'expand') {
-                if (DataMgr.myData.expandMap[key]) {
-                    ableToBuild = false;
-                }
-                if (this.currentBlueprintIJ.i >= 0) {
-                    ableToBuild = false;
+                this.blueprint.setContentSize(300, 300);
+                this.blueprintIndicator.node.setContentSize(300, 300);
+                for (let di = -1; di <= 1; di++) {
+                    for (let dj = -1; dj <= 1; dj++) {
+                        let i = this.currentBlueprintIJ.i + di;
+                        let j = this.currentBlueprintIJ.j + dj;
+                        let key = i + ',' + j;
+                        if (DataMgr.myData.expandMap[key]) {
+                            ableToBuild = false;
+                            break;
+                        }
+                        if (i >= 0) {
+                            ableToBuild = false;
+                        }
+                    }
+                    if (!ableToBuild) break;
                 }
             } else {
+                this.blueprint.setContentSize(100, 100);
+                this.blueprintIndicator.node.setContentSize(100, 100);
+                let key = this.currentBlueprintIJ.i + ',' + this.currentBlueprintIJ.j;
                 if (DataMgr.myData.buildingMap[key]) {
                     ableToBuild = false;
                 } else if (!DataMgr.myData.expandMap[key]) {
@@ -320,8 +339,13 @@ export default class ArkUI extends BaseUI {
         let now = event.getLocation();
         let touchPosInArkMap = this.arkMap.convertToNodeSpaceAR(now);
         // this.blueprint.position = touchPosInArkMap;
-        this.currentBlueprintIJ.i = Math.round(touchPosInArkMap.x / 100);
-        this.currentBlueprintIJ.j = Math.round(touchPosInArkMap.y / 100);
+        if (this.currentHoldingBlueprint == 'expand') {
+            this.currentBlueprintIJ.i = Math.round((touchPosInArkMap.x / 100 + 2) / 3) * 3 - 2;
+            this.currentBlueprintIJ.j = Math.round(touchPosInArkMap.y / 100 / 3) * 3;
+        } else {
+            this.currentBlueprintIJ.i = Math.round(touchPosInArkMap.x / 100);
+            this.currentBlueprintIJ.j = Math.round(touchPosInArkMap.y / 100);
+        }
     }
     @property(cc.Node)
     grpBuild: cc.Node = null;
@@ -330,13 +354,22 @@ export default class ArkUI extends BaseUI {
     onBtnConfirmBuildClick() {
         if (this.currentHoldingBlueprint == 'expand') {
             //确定扩建
-            BlockchainMgr.Instance.callFunction('expand', [this.currentBlueprintIJ.i, this.currentBlueprintIJ.j], DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1) + 1e-5,
+            let ijList = [];
+            for (let di = -1; di <= 1; di++) {
+                for (let dj = -1; dj <= 1; dj++) {
+                    let i = this.currentBlueprintIJ.i + di;
+                    let j = this.currentBlueprintIJ.j + dj;
+                    ijList.push([i, j]);
+                }
+            }
+            BlockchainMgr.Instance.callFunction('expand', [ijList], DataMgr.getExpandCost(DataMgr.myData.expandCnt, 9) + 1e-5,
                 (resp) => {
                     if (resp.toString().substr(0, 5) != 'Error') {
                         DialogPanel.PopupWith2Buttons('正在递交扩建计划',
                             '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
                                 window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
                             }, '确定', null);
+                        this.currentHoldingBlueprint = null;
                     } else {
                         ToastPanel.Toast('交易失败:' + resp);
                     }
@@ -351,6 +384,7 @@ export default class ArkUI extends BaseUI {
                             '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
                                 window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
                             }, '确定', null);
+                        this.currentHoldingBlueprint = null;
                     } else {
                         ToastPanel.Toast('交易失败:' + resp);
                     }
@@ -441,16 +475,14 @@ export default class ArkUI extends BaseUI {
     onProduceBtnClick() {
         let data = DataMgr.myData.buildingMap[this.selectedBuilding.node.name];
         let curTime = Number(new Date());
-        if (curTime >= data.recoverTime) {
-            ProductionPanel.Instance.node.active = true;
-            ProductionPanel.Instance.setAndRefresh(this.selectedBuilding, DataMgr.myData.buildingMap[this.selectedBuilding.node.name]);
-        } else {
-            ToastPanel.Toast('生产设施尚未冷却');
-        }
-    }
-}
 
-class Cell {
-    isLand = false;
-    building: Building = null;
+        if (curTime < data.recoverTime) {
+            ToastPanel.Toast('生产设施尚未冷却');
+            return;
+        }
+
+        ProductionPanel.Instance.node.active = true;
+        ProductionPanel.Instance.setAndRefresh(this.selectedBuilding, DataMgr.myData.buildingMap[this.selectedBuilding.node.name]);
+
+    }
 }
