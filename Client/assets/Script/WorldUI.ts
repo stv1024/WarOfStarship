@@ -364,18 +364,13 @@ export default class WorldUI extends BaseUI {
             BlockchainMgr.Instance.collectIslandMoney(island.data.id);
         }
     }
-    onIslandSponsorLinkClick() {
-        const island = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Island) : null;
-        if (island && island.data.sponsorLink) {
-            window.open(island.data.sponsorLink);
-        }
-    }
-    onIslandIWantSponsorClick() {
-        const island = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Island) : null;
-        if (island) {
-            SponsorIslandPanel.Instance.node.active = true;
-            SponsorIslandPanel.Instance.setData(island);
-        }
+    onBtnSetDestinationClick() {
+        if (!this.selectedObjectNode) return;
+        this.editSailDestinationMode = true;
+        let touchPos = this.selectedObjectNode.position;
+        this.newDestination = touchPos.mul(1 / this.zoomScale);
+        this.sailDestinationIndicator.position = this.newDestination.mul(this.zoomScale);
+        this.selectedObjectNode = null;
     }
 
     //航行
