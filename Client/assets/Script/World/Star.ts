@@ -39,5 +39,10 @@ export default class Star extends cc.Component {
 
     onCircleClick() {
         WorldUI.Instance.selectObject(this.node);
+        this.fetchBlockchainData();
+    }
+
+    fetchBlockchainData() {
+        
     }
 }

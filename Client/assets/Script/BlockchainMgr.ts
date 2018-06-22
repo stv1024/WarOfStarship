@@ -125,6 +125,28 @@ export default class BlockchainMgr extends cc.Component {
         }
     }
 
+    getFunction(functionName: string, callArgs, callback) {
+        let neb = new Neb();
+        neb.setRequest(new HttpRequest(BlockchainMgr.BlockchainUrl));
+
+        let from = BlockchainMgr.WalletAddress ? BlockchainMgr.WalletAddress : Account.NewAccount().getAddressString();
+        var value = "0";
+        var nonce = "0"
+        var gas_price = "1000000"
+        var gas_limit = "2000000"
+        var callFunction = functionName;
+        var contract = {
+            "function": callFunction,
+            "args": JSON.stringify(callArgs)
+        }
+        let self = this;
+        neb.api.call(from, ContractAddress, value, nonce, gas_price, gas_limit, contract).then(
+            callback
+        ).catch(function (err) {
+            console.log("call get_map_info error:" + err.message)
+        })
+    }
+
     onGetWalletData(e) {
         if (e.data && e.data.data && e.data.data.account && e.data.data.account.length > 0) {
             var address = e.data.data.account;

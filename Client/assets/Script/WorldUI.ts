@@ -205,6 +205,19 @@ export default class WorldUI extends BaseUI {
             if (star) {
                 this.grpSelectSpeArk.active = false;
                 this.grpSelectObject.active = true;
+                if (star.data.occupant && island.data.occupant == DataMgr.myData.address) {
+                    this.lblAttackButton.string = '追加\n驻军';
+                    const t0 = island.data.lastMineTime;
+                    const t1 = Number(new Date());
+                    const t = (t1 - t0) / (1000 * 3600);//h
+                    const r = island.data.miningRate;
+                    const m = island.data.money * (1 - Math.exp(-r * t)) / 1e18;
+                    this.btnCollectIsland.node.active = true;
+                    this.btnCollectIsland.getComponentInChildren(cc.Label).string = '收取';
+                } else {
+                    this.lblAttackButton.string = '攻占';
+                    this.btnCollectIsland.node.active = false;
+                }
             } else if (arkIW) {
                 this.grpSelectSpeArk.active = false;
                 this.grpSelectObject.active = false;
