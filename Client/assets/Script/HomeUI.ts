@@ -133,12 +133,13 @@ export default class HomeUI extends BaseUI {
             '-2,3': { id: "bomberprod", lv: 3, recoverTime: curTime - 10e4, justBuildOrUpgrade: true },
             '-3,3': { id: "laserprod", lv: 4, recoverTime: curTime + 100 * 60e3, justBuildOrUpgrade: false },
         };
+        user.expandCnt = 1;
         user.expandMap = {
             '-1,1': { order: 0 },
-            '-1,2': { order: 1 },
-            '-2,2': { order: 2 },
-            '-2,3': { order: 3 },
-            '-3,3': { order: 3 },
+            // '-1,2': { order: 1 },
+            // '-2,2': { order: 2 },
+            // '-2,3': { order: 3 },
+            // '-3,3': { order: 3 },
         };
         user.cargoData = {
             iron: 320,
