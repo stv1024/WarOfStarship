@@ -1,25 +1,30 @@
 import { StarInfo } from "../DataMgr";
 import WorldUI from "../WorldUI";
+import BlockchainMgr from "../BlockchainMgr";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class Star extends cc.Component {
 
+    index: number;
     info: StarInfo;
 
     @property(cc.Node)
     btn: cc.Node = null;
 
     mouseHover = false;
-    
+
+    data: any;
+
     onLoad() {
         const self = this;
         this.btn.on(cc.Node.EventType.MOUSE_ENTER, () => { self.mouseHover = true; }, this);
         this.btn.on(cc.Node.EventType.MOUSE_LEAVE, () => { self.mouseHover = false; }, this);
     }
 
-    setAndRefresh(info: StarInfo) {
+    setAndRefresh(index: number, info: StarInfo) {
+        this.index = index;
         this.info = info;
     }
 
@@ -43,6 +48,7 @@ export default class Star extends cc.Component {
     }
 
     fetchBlockchainData() {
-        
+        let self = this;
+        BlockchainMgr.Instance.getFunction('getStarData', [this.index], (resp) => { self.data = resp.result; });
     }
 }

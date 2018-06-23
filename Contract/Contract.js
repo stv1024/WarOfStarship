@@ -969,6 +969,12 @@ GameContract.prototype = {
         starInfo.energyAbundance = (1 - b) * d;
         return starInfo;
     },
+    getStarData: function (index) {
+        if (index >= this.totalStarCnt) {
+            throw new Error("index must < totalStarCnt." + index + '<' + this.totalStarCnt);
+        }
+        return this.allStars.get(index);
+    },
     APHash1: function (str) {
         let hash = 0xAAAAAAAA;
         for (let i = 0; i < str.length; i++) {

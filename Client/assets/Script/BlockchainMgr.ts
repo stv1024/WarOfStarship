@@ -139,11 +139,10 @@ export default class BlockchainMgr extends cc.Component {
             "function": callFunction,
             "args": JSON.stringify(callArgs)
         }
-        let self = this;
         neb.api.call(from, ContractAddress, value, nonce, gas_price, gas_limit, contract).then(
             callback
         ).catch(function (err) {
-            console.log("call get_map_info error:" + err.message)
+            console.error(`Neb call ${functionName} error:` + err.message)
         })
     }
 

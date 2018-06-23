@@ -40,7 +40,7 @@ export class DataMgr {
     }
 
     static getEnergyCostOfAttack(distance: number, tankPower, chopperPower, shipPower) {
-        return 0.01 * distance * (tankPower + chopperPower + shipPower);
+        return 1 * (tankPower + chopperPower + shipPower);
     }
 
     static calcCurrentMoneyInIsland(data: IslandData): number {

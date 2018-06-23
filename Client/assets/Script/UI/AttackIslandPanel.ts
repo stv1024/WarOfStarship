@@ -1,7 +1,9 @@
-import { DataMgr } from "../DataMgr";
+import { DataMgr, StarInfo } from "../DataMgr";
 import Island from "../World/Island";
 import BlockchainMgr from "../BlockchainMgr";
 import DialogPanel from "../DialogPanel";
+import Star from "../World/Star";
+import ToastPanel from "./ToastPanel";
 
 const { ccclass, property } = cc._decorator;
 
@@ -19,6 +21,10 @@ export default class AttackIslandPanel extends cc.Component {
     @property(cc.Label)
     lblDefShip: cc.Label = null;
 
+    @property(cc.Label)
+    lblIronRate: cc.Label = null;
+    @property(cc.Label)
+    lblEnergyRate: cc.Label = null;
     @property(cc.Label)
     lblAtkTankMax: cc.Label = null;
     @property(cc.Label)
@@ -48,22 +54,14 @@ export default class AttackIslandPanel extends cc.Component {
     chopperMax = 0;
     shipMax = 0;
 
-    island: Island;
+    star: Star;
+    starInfo: StarInfo;
 
-    setAndRefresh(island: Island) {
-        this.island = island;
+    setAndRefresh(star: Star, starInfo: StarInfo) {
+        this.starInfo = starInfo;
+        this.star = star;
 
-        let amIOccupant = DataMgr.myData.address == island.data.occupant;
-        let data = amIOccupant ? DataMgr.myData : DataMgr.othersData.find(d => d.address == island.data.occupant);
-        this.lblOccupant.string = data ? data.nickname : island.data.occupant;
-        this.lblConfirmButton.string = amIOccupant ? '追加' : '进攻';
 
-        let powerAttenuRate = 0.05;
-        let hoursDelta = (Number(new Date()) - island.data.lastBattleTime) / (1000 * 3600);
-        let attenu = Math.exp(-powerAttenuRate * hoursDelta);
-        this.lblDefTank.string = (island.data.tankPower * attenu).toFixed();
-        this.lblDefChopper.string = (island.data.chopperPower * attenu).toFixed();
-        this.lblDefShip.string = (island.data.shipPower * attenu).toFixed();
         this.SldAtkTank.progress = 0;
         this.SldAtkChopper.progress = 0;
         this.SldAtkShip.progress = 0;
@@ -113,50 +111,74 @@ export default class AttackIslandPanel extends cc.Component {
     }
 
     update(dt) {
-        this.tankMax = Math.floor(DataMgr.myCargoData.find(d => d.id == 'tank23532').amount);
+        let starData = this.star.data;
+        let amIOccupant = starData && DataMgr.myData.address == starData.occupant;
+        let data = amIOccupant ? DataMgr.myData :
+            (starData && starData.occupant ? DataMgr.othersData.find(d => d.address == starData.occupant) : null);
+        this.lblOccupant.string = data ? data.nickname : starData.occupant;
+        this.lblConfirmButton.string = amIOccupant ? '追加' : '进攻';
+        this.lblDefTank.string = starData ? (starData.army['fighter']) : 0;
+        this.lblDefChopper.string = starData ? (starData.army['bomber']) : 0;
+        this.lblDefShip.string = starData ? (starData.army['laser']) : 0;
+        this.tankMax = Math.floor(DataMgr.myData.cargoData['fighter']);
         this.lblAtkTankMax.string = '/' + this.tankMax.toFixed();
-        this.chopperMax = Math.floor(DataMgr.myCargoData.find(d => d.id == 'chopper424').amount);
+        this.chopperMax = Math.floor(DataMgr.myData.cargoData['bomber']);
         this.lblAtkChopperMax.string = '/' + this.chopperMax.toFixed();
-        this.shipMax = Math.floor(DataMgr.myCargoData.find(d => d.id == 'ship40342').amount);
+        this.shipMax = Math.floor(DataMgr.myData.cargoData['laser']);
         this.lblAtkShipMax.string = '/' + this.shipMax.toFixed();
+        this.lblIronRate.string = (this.starInfo.ironAbundance * this.starInfo.ironAbundance * 1000).toPrecision(4) + '/h';
+        this.lblEnergyRate.string = (this.starInfo.energyAbundance * this.starInfo.energyAbundance * 1000).toPrecision(4) + '/h';
     }
 
     refreshMethaneCost() {
-        const distance = this.island.node.position.sub(new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y)).mag();
-        const costMethane = DataMgr.getEnergyCostOfAttack(distance,
+        const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
+        const myPos = DataMgr.getUserCurrentLocation(DataMgr.myData);
+        const distance = starPos.sub(myPos).mag();
+        const costMethane = DataMgr.getEnergyCostOfAttack(0,
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
-        const totalMethane = DataMgr.myCargoData.find(d => d.id == 'methane74').amount;
-        this.lblDistance.string = distance.toFixed() + 'km';
+        const totalMethane = DataMgr.myData.cargoData.energy;
+        this.lblDistance.string = distance.toPrecision(4) + 'ly';
         this.lblMethane.string = costMethane.toFixed() + '/' + totalMethane.toFixed();
     }
 
     onConfirmClick() {
-        console.log('准备攻占资源岛', this.island);
+        console.log('准备攻占资源岛', this.star);
 
-        const distance = this.island.node.position.sub(new cc.Vec2(DataMgr.myData.currentLocation.x, DataMgr.myData.currentLocation.y)).mag();
+        const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
+        const myPos = DataMgr.getUserCurrentLocation(DataMgr.myData);
+        const distance = starPos.sub(myPos).mag();
+
+        if (distance > 100) {
+            ToastPanel.Toast("距离100ly之内才能进攻");
+            return;
+        }
+
         const costMethane = DataMgr.getEnergyCostOfAttack(distance,
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
-        const methaneData = DataMgr.myCargoData.find(d => d.id == 'methane74');
+        const methaneData = DataMgr.myData['energy'];
         if (costMethane <= methaneData.amount) {
             const tank = Math.round(this.SldAtkTank.progress * this.tankMax);
             const chopper = Math.round(this.SldAtkChopper.progress * this.chopperMax);
             const ship = Math.round(this.SldAtkShip.progress * this.shipMax);
-            BlockchainMgr.Instance.attackIsland(this.island.data.id, tank, chopper, ship, () => {
-                try {
-                    methaneData.amount = Math.max(0, methaneData.amount - costMethane);
-                    DataMgr.myCargoData.find(d => d.id == 'tank23532').amount -= tank;
-                    DataMgr.myCargoData.find(d => d.id == 'chopper424').amount -= chopper;
-                    DataMgr.myCargoData.find(d => d.id == 'ship40342').amount -= ship;
-                } catch (error) {
-
+            BlockchainMgr.Instance.callFunction('attackStar',
+                this.star.index, { fighter: tank, bomber: chopper, laser: ship },
+                (resp) => {
+                    if (resp.toString().substr(0, 5) != 'Error') {
+                        DialogPanel.PopupWith2Buttons('正在递交作战计划',
+                            '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                            }, '确定', null);
+                    } else {
+                        ToastPanel.Toast('交易失败:' + resp);
+                    }
                 }
-            });
+            );
         } else {
-            DialogPanel.PopupWith1Button('燃料不足', '将方舟靠近目标，减少派兵数量，或者生产更多甲烷吧', '确定', null);
+            ToastPanel.Toast("反物质不足");
         }
     }
 
