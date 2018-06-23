@@ -40,8 +40,8 @@ let User = function (jsonStr) {
             //"-3,2":{id:"ironcoll", lv:2, recoverTime:10302019313, justBuildOrUpgrade: true}
         };
         this.cargoData = {
-            energy: 1000000,
-            iron: 1000000,
+            energy: 200,
+            iron: 80,
             fighter: 0,
             bomber: 0,
             defender: 0,
@@ -195,7 +195,7 @@ GameContract.prototype = {
         this.adminAddress = Blockchain.transaction.from;
         this.totalNas = new BigNumber(0);
         this.shipSpeed = 100;
-        this.energyCostPerLyExpand = 1;
+        this.energyCostPerLyExpand = 0.01;
         this.totalStarCnt = 300;
         this.allUserList = [];
         // this.allBuildingInfos = {};
@@ -423,6 +423,7 @@ GameContract.prototype = {
         if (!user.buildingMap[i + ',' + j]) {
             throw new Error("Upgrade Failed. (" + i + ',' + j + ") has no building.");
         }
+        let buildingId = user.buildingMap[i + ',' + j].id;
         //buildingInfo
         let info = this.allBuildingInfos.get(buildingId);
         if (!info) {
@@ -644,7 +645,7 @@ GameContract.prototype = {
             throw new Error("User NOT FOUND.");
         }
         this._recalcUser(user);
-        let locData = user.locData;
+        let locData = user.locationData;
         //check distance
         let dx = locData.x - starInfo.x;
         let dy = locData.y - starInfo.y;
@@ -766,7 +767,7 @@ GameContract.prototype = {
         let dX = locData.destinationX - locData.lastLocationX;
         let dY = locData.destinationY - locData.lastLocationY;
         let dist = Math.sqrt(dX * dX + dY * dY);
-        let needTime = dist / user.locationData.speed;
+        let needTime = dist / (user.locationData.speed / 60 / 1000);
         let t = (curTime - user.locationData.lastLocationTime) / needTime;
         if (t < 1) {
             let curLoc = this._lerpVec2({ x: locData.lastLocationX, y: locData.lastLocationY }, { x: locData.destinationX, y: locData.destinationY }, t, false);
@@ -781,19 +782,13 @@ GameContract.prototype = {
         locData.lastLocationTime = curTime;
         user.locationData = locData;
 
-        if (user.state == 0) {
+        //collecting
+        let collectingHours = (curTime - user.lastCalcTime) / 3600000;
+        let collectedIron = this.getUserCollectorRate(user.address, 'ironcoll') * collectingHours;
+        let collectedEnergy = this.getUserCollectorRate(user.address, 'energycoll') * collectingHours;
+        user.cargoData.iron += collectedIron;
+        user.cargoData.energy += collectedEnergy;
 
-        } else if (user.state == 1) {
-            //collecting
-            if (user.collectingStarIndex) {
-                let star = this.getStarInfo(user.collectingStarIndex);
-                let collectingHours = (curTime - user.lastCalcTime) / 3600000;
-                let collectedIron = star.ironAbundance * this.getUserCollectorRate(user.address, 'ironcoll') * collectingHours;
-                let collectedEnergy = star.energyAbundance * this.getUserCollectorRate(user.address, 'energycoll') * collectingHours;
-                user.cargoData.iron += collectedIron;
-                user.cargoData.energy += collectedEnergy;
-            }
-        }
         user.lastCalcTime = curTime;
 
         this.allUsers.set(user.address, user);

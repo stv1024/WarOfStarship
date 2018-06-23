@@ -121,12 +121,18 @@ export default class ArkUI extends BaseUI {
             this.refreshAll();
         }
 
+        let cargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
         for (let i = 0; i < DataMgr.CargoConfig.length; i++) {
             const cargoInfo = DataMgr.CargoConfig[i];
-            let data = DataMgr.myData.cargoData[cargoInfo.id];
-            let estimateRate: number = 0; // DataMgr.outputRates[cargoInfo.id];
-            if (!estimateRate) estimateRate = 0;
-            let str = cargoInfo.Name + '   ' + Math.floor(data).toFixed() + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + ')';
+            const cargoId = cargoInfo.id;
+            let str: string;
+            let warehouseCap = DataMgr.getUserWarehouseCap(cargoId).toFixed();
+            if (DataMgr.getBuildingInfo(cargoId + 'coll')) {
+                let estimateRate = DataMgr.getUserCollectorRate(DataMgr.myData, cargoId + 'coll');
+                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() +'/' + warehouseCap + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + '/h)';
+            } else {
+                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() +'/' + warehouseCap;
+            }
             this.cargoLabels[cargoInfo.id].string = str;
         }
 
@@ -414,7 +420,7 @@ export default class ArkUI extends BaseUI {
         if (this.selectedBuilding) {
             DialogPanel.PopupWith2Buttons('确定拆除建筑吗',
                 self.selectedBuilding.info.Name
-                + '\n建筑材料不予返还',
+                + '\n可回收部分建筑材料',
                 '取消', null,
                 '拆除', () => {
                     let ij = JSON.parse('[' + this.selectedBuilding.node.name + ']');
@@ -446,7 +452,7 @@ export default class ArkUI extends BaseUI {
         let self = ArkUI.Instance;
         if (this.selectedBuilding) {
             let ironCost = DataMgr.getBuildingInfoItemWithLv(this.selectedBuilding.data.id, 'IronCost', this.selectedBuilding.data.lv + 1);
-            DialogPanel.PopupWith2Buttons('升级' + self.selectedBuilding.info.Name + "到Lv" + (this.selectedBuilding.data.lv + 1),
+            DialogPanel.PopupWith2Buttons('升级' + self.selectedBuilding.info.Name + "到Lv" + (this.selectedBuilding.data.lv + 2),
                 "需要" + ironCost + '铁',
                 '取消', null,
                 '升级', () => {

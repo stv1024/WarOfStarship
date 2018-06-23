@@ -15,7 +15,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1tyrXfTRUFWeFzFVfY27yJqhNF3ac7LfEP'; //
+export const ContractAddress = 'n1mUvM8r7TJAdozw3oMYbAsoX3WAX2bKBLB'; //
 export const EncKey = 37234;
 
 @ccclass
@@ -25,8 +25,8 @@ export default class BlockchainMgr extends cc.Component {
         BlockchainMgr.Instance = this;
     }
 
-    // static BlockchainUrl: string = 'https://mainnet.nebulas.io';
-    static BlockchainUrl: string = 'https://testnet.nebulas.io';
+    static BlockchainUrl: string = 'https://mainnet.nebulas.io';
+    // static BlockchainUrl: string = 'https://testnet.nebulas.io';
     static WalletAddress: string;
 
     static CheckWalletInterval = 10;
@@ -126,24 +126,28 @@ export default class BlockchainMgr extends cc.Component {
     }
 
     getFunction(functionName: string, callArgs, callback) {
-        let neb = new Neb();
-        neb.setRequest(new HttpRequest(BlockchainMgr.BlockchainUrl));
+        try {
+            let neb = new Neb();
+            neb.setRequest(new HttpRequest(BlockchainMgr.BlockchainUrl));
 
-        let from = BlockchainMgr.WalletAddress ? BlockchainMgr.WalletAddress : Account.NewAccount().getAddressString();
-        var value = "0";
-        var nonce = "0"
-        var gas_price = "1000000"
-        var gas_limit = "2000000"
-        var callFunction = functionName;
-        var contract = {
-            "function": callFunction,
-            "args": JSON.stringify(callArgs)
+            let from = BlockchainMgr.WalletAddress ? BlockchainMgr.WalletAddress : Account.NewAccount().getAddressString();
+            var value = "0";
+            var nonce = "0"
+            var gas_price = "1000000"
+            var gas_limit = "2000000"
+            var callFunction = functionName;
+            var contract = {
+                "function": callFunction,
+                "args": JSON.stringify(callArgs)
+            }
+            neb.api.call(from, ContractAddress, value, nonce, gas_price, gas_limit, contract).then(
+                callback
+            ).catch(function (err) {
+                console.error(`Neb call ${functionName} error:` + err.message)
+            })
+        } catch (error) {
+            console.error(error);
         }
-        neb.api.call(from, ContractAddress, value, nonce, gas_price, gas_limit, contract).then(
-            callback
-        ).catch(function (err) {
-            console.error(`Neb call ${functionName} error:` + err.message)
-        })
     }
 
     onGetWalletData(e) {

@@ -1,6 +1,7 @@
-import { StarInfo } from "../DataMgr";
+import { StarInfo, DataMgr } from "../DataMgr";
 import WorldUI from "../WorldUI";
 import BlockchainMgr from "../BlockchainMgr";
+import MathUtil from "../Utils/MathUtil";
 
 const { ccclass, property } = cc._decorator;
 
@@ -10,6 +11,8 @@ export default class Star extends cc.Component {
     index: number;
     info: StarInfo;
 
+    @property(cc.Node)
+    spr: cc.Node = null;
     @property(cc.Node)
     btn: cc.Node = null;
 
@@ -26,6 +29,9 @@ export default class Star extends cc.Component {
     setAndRefresh(index: number, info: StarInfo) {
         this.index = index;
         this.info = info;
+        this.spr.color = Star.getColor(info);
+        let size = 4 * Star.getRelSize(info);
+        this.node.setContentSize(size, size);
     }
 
     refreshZoom(zoomScale: number) {
@@ -49,6 +55,17 @@ export default class Star extends cc.Component {
 
     fetchBlockchainData() {
         let self = this;
-        BlockchainMgr.Instance.getFunction('getStarData', [this.index], (resp) => { self.data = resp.result; });
+        BlockchainMgr.Instance.getFunction('getStarData', [this.index], (resp) => { self.data = JSON.parse(resp.result); });
+    }
+
+    static getColor(starInfo: StarInfo) {
+        let red = Math.min(1, MathUtil.lerp(0.5, 1.2, starInfo.ironAbundance, true));
+        let green = Math.min(1, MathUtil.lerp(0.5, 1.2, starInfo.energyAbundance, true));
+        let blue = (red + green) / 2;
+
+        return new cc.Color(red * 255, green * 255, blue * 255);
+    }
+    static getRelSize(starInfo: StarInfo) {
+        return MathUtil.lerp(0.7, 1.5, (starInfo.ironAbundance + starInfo.energyAbundance) / 2);
     }
 }

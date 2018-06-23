@@ -40,20 +40,6 @@ export default class MainCtrl extends cc.Component {
 
 
     update(dt: number) {
-        if (!DataMgr.BuildingConfig || !DataMgr.CargoConfig) return;
-
-        if (DataMgr.myData) {
-            DataMgr.outputRates = {};
-
-            //航行
-            if (DataMgr.myBuildingData) {
-                DataMgr.myBuildingData.forEach(buildingData => {
-                    
-                });
-            }
-            
-        }
-
         MainCtrl.Ticks++;
     }
 }

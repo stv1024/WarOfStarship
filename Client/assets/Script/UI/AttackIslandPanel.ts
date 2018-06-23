@@ -13,6 +13,8 @@ export default class AttackIslandPanel extends cc.Component {
     onLoad() { AttackIslandPanel.Instance = this; this.node.active = false; }
 
     @property(cc.Label)
+    lblTitle: cc.Label = null;
+    @property(cc.Label)
     lblOccupant: cc.Label = null;
     @property(cc.Label)
     lblDefTank: cc.Label = null;
@@ -61,13 +63,18 @@ export default class AttackIslandPanel extends cc.Component {
         this.starInfo = starInfo;
         this.star = star;
 
+        console.log('AIP.setARef', star, starInfo)
+        this.lblTitle.string = '恒星 #' + star.index;
 
         this.SldAtkTank.progress = 0;
         this.SldAtkChopper.progress = 0;
         this.SldAtkShip.progress = 0;
-        this.onSliderChange(null, 'Tank');
-        this.onSliderChange(null, 'Chopper');
-        this.onSliderChange(null, 'Ship');
+        this.edtAtkTank.string = '0';
+        this.edtAtkChopper.string = '0';
+        this.edtAtkShip.string = '0';
+        // this.onSliderChange(null, 'Tank');
+        // this.onSliderChange(null, 'Chopper');
+        // this.onSliderChange(null, 'Ship');
         this.refreshMethaneCost();
     }
 
@@ -111,11 +118,13 @@ export default class AttackIslandPanel extends cc.Component {
     }
 
     update(dt) {
+        if (!DataMgr.myData) return;
         let starData = this.star.data;
         let amIOccupant = starData && DataMgr.myData.address == starData.occupant;
-        let data = amIOccupant ? DataMgr.myData :
+        let occupantData = amIOccupant ? DataMgr.myData :
             (starData && starData.occupant ? DataMgr.othersData.find(d => d.address == starData.occupant) : null);
-        this.lblOccupant.string = data ? data.nickname : starData.occupant;
+        this.lblOccupant.string = occupantData ? occupantData.nickname :
+            (starData ? starData.occupant : '无');
         this.lblConfirmButton.string = amIOccupant ? '追加' : '进攻';
         this.lblDefTank.string = starData ? (starData.army['fighter']) : 0;
         this.lblDefChopper.string = starData ? (starData.army['bomber']) : 0;
@@ -131,6 +140,7 @@ export default class AttackIslandPanel extends cc.Component {
     }
 
     refreshMethaneCost() {
+        if (!DataMgr.myData) return;
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
         const myPos = DataMgr.getUserCurrentLocation(DataMgr.myData);
         const distance = starPos.sub(myPos).mag();
@@ -144,6 +154,7 @@ export default class AttackIslandPanel extends cc.Component {
     }
 
     onConfirmClick() {
+        if (!DataMgr.myData) return;
         console.log('准备攻占资源岛', this.star);
 
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
@@ -159,13 +170,13 @@ export default class AttackIslandPanel extends cc.Component {
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
-        const methaneData = DataMgr.myData['energy'];
-        if (costMethane <= methaneData.amount) {
+        const energy = DataMgr.myData.cargoData.energy;
+        if (costMethane <= energy) {
             const tank = Math.round(this.SldAtkTank.progress * this.tankMax);
             const chopper = Math.round(this.SldAtkChopper.progress * this.chopperMax);
             const ship = Math.round(this.SldAtkShip.progress * this.shipMax);
             BlockchainMgr.Instance.callFunction('attackStar',
-                this.star.index, { fighter: tank, bomber: chopper, laser: ship },
+                [this.star.index, { fighter: tank, bomber: chopper, laser: ship }], 0,
                 (resp) => {
                     if (resp.toString().substr(0, 5) != 'Error') {
                         DialogPanel.PopupWith2Buttons('正在递交作战计划',

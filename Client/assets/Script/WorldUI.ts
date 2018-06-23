@@ -206,7 +206,7 @@ export default class WorldUI extends BaseUI {
                 this.grpSelectSpeArk.active = false;
                 this.grpSelectObject.active = true;
                 if (star.data) {
-                    if (star.data.occupant && island.data.occupant == DataMgr.myData.address) {
+                    if (star.data.occupant && star.data.occupant == DataMgr.myData.address) {
                         this.lblAttackButton.string = '追加\n驻军';
                         this.btnCollectIsland.node.active = true;
                         this.btnCollectIsland.getComponentInChildren(cc.Label).string = '收取';
@@ -215,8 +215,8 @@ export default class WorldUI extends BaseUI {
                         this.btnCollectIsland.node.active = false;
                     }
                 } else {
-                        this.lblAttackButton.string = '获取\n信息中';
-                        this.btnCollectIsland.node.active = false;
+                    this.lblAttackButton.string = '攻占';
+                    this.btnCollectIsland.node.active = false;
                 }
             } else if (arkIW) {
                 this.grpSelectSpeArk.active = false;
@@ -326,7 +326,11 @@ export default class WorldUI extends BaseUI {
     lblAsideSelectFrame: cc.Label = null;
     selectedObjectNode: cc.Node;
     selectObject(node: cc.Node) {
-        if (this.editSailDestinationMode) return;
+        if (this.editSailDestinationMode) {
+            this.newDestination = node.position.mul(1 / this.zoomScale);
+            this.sailDestinationIndicator.position = this.newDestination.mul(this.zoomScale);
+            return;
+        }
         this.selectedObjectNode = node;
     }
     selectSpecialArk(arkNode: cc.Node) {
@@ -372,9 +376,23 @@ export default class WorldUI extends BaseUI {
     }
     onBtnCollectIslandClick() { //收获
         const island = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Island) : null;
-        if (!island) return;
-        if (island.data.occupant == DataMgr.myData.address) {
+        if (island && island.data.occupant == DataMgr.myData.address) {
             BlockchainMgr.Instance.collectIslandMoney(island.data.id);
+        }
+        const star = this.selectedObjectNode ? this.selectedObjectNode.getComponent(Star) : null;
+        if (star && star.data.occupant == DataMgr.myData.address) {
+            BlockchainMgr.Instance.callFunction('collectStar', [star.index], 0,
+                (resp) => {
+                    if (resp.toString().substr(0, 5) != 'Error') {
+                        DialogPanel.PopupWith2Buttons('正在收集',
+                            '区块链交易已发送，等待出块\nTxHash:' + resp.txhash, '查看交易', () => {
+                                window.open('https://explorer.nebulas.io/#/tx/' + resp.txhash);
+                            }, '确定', null);
+                    } else {
+                        ToastPanel.Toast('交易失败:' + resp);
+                    }
+                }
+            );
         }
     }
     onBtnSetDestinationClick() {
@@ -383,6 +401,10 @@ export default class WorldUI extends BaseUI {
         let touchPos = this.selectedObjectNode.position;
         this.newDestination = touchPos.mul(1 / this.zoomScale);
         this.sailDestinationIndicator.position = this.newDestination.mul(this.zoomScale);
+
+        let info = this.selectedObjectNode.getComponent(Star).info;
+        console.log(info.x, info.y, this.newDestination, this.zoomScale);
+
         this.selectedObjectNode = null;
     }
 

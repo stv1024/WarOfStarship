@@ -33,7 +33,7 @@ export default class BuildPanel extends cc.Component {
     }
 
     onEnable() {
-        this.lblExpandCost.string = CurrencyFormatter.formatNAS(DataMgr.getExpandCost(DataMgr.myData.expandCnt, 1)) + 'NAS';
+        this.lblExpandCost.string = CurrencyFormatter.formatNAS(DataMgr.getExpandCost(DataMgr.myData.expandCnt, 9)) + 'NAS';
     }
 
     refresh() {

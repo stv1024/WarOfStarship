@@ -16,7 +16,7 @@ export class DataMgr {
     static outputRates = {};
 
     static shipSpeed = 100;
-    static energyCostPerLyExpand = 1;
+    static energyCostPerLyExpand = 0.01;
 
     private static inited = false;
     static init() {
@@ -67,8 +67,8 @@ export class DataMgr {
         let starInfo = new StarInfo();
         starInfo.x = x;
         starInfo.y = y;
-        starInfo.ironAbundance = b * c;
-        starInfo.energyAbundance = b * d;
+        starInfo.ironAbundance = (1 - b) * c;
+        starInfo.energyAbundance = (1 - b) * d;
         return starInfo;
     }
     static APHash1(str: string) {
@@ -100,8 +100,8 @@ export class DataMgr {
         }
         return value;
     }
-    
-    static getUserWarehouseCap (cargoName) {
+
+    static getUserWarehouseCap(cargoName) {
         let houseName = cargoName + 'house';
         let user = DataMgr.myData;
         let cap = 0;
@@ -112,6 +112,33 @@ export class DataMgr {
             }
         }
         return cap;
+    }
+
+    static getUserCurrentCargoData(user: UserData) {
+        let curCargoData = {};
+        for (let key in user.cargoData) {
+            curCargoData[key] = user.cargoData[key];
+        }
+        let curTime = (new Date()).valueOf();
+        let collectingHours = (curTime - user.lastCalcTime) / 3600000;
+        let collectedIron = DataMgr.getUserCollectorRate(user, 'ironcoll') * collectingHours;
+        let collectedEnergy = DataMgr.getUserCollectorRate(user, 'energycoll') * collectingHours;
+        curCargoData['iron'] = user.cargoData.iron + collectedIron;
+        curCargoData['energy'] = user.cargoData.energy + collectedEnergy;
+        return curCargoData;
+    }
+    static getUserCollectorRate(user: UserData, buildingId: string) {
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        let rate = 0;
+        for (let key in user.buildingMap) {
+            let bdg = user.buildingMap[key];
+            if (bdg && bdg.id === buildingId) {
+                rate += DataMgr.getBuildingInfoItemWithLv(buildingId, 'Out0Rate', bdg.lv);
+            }
+        }
+        return rate;
     }
 }
 

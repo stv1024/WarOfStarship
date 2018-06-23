@@ -25,7 +25,8 @@ export default class BuildingButton extends cc.Component {
     }
 
     onClick() {
-        BuildingInfoPanel.Show(this.info);
+        // BuildingInfoPanel.Show(this.info);
+        this.onBuildClick();
     }
 
     onBuildClick() {

@@ -1,0 +1,30 @@
+{
+  "ver": "1.0.0",
+  "uuid": "c38550e9-c808-4611-bb32-97a60aee87a9",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "subMetas": {
+    "DecoOtherCooker": {
+      "ver": "1.0.3",
+      "uuid": "c0684ed6-f11c-4475-a8f6-cb58c1eb8b04",
+      "rawTextureUuid": "c38550e9-c808-4611-bb32-97a60aee87a9",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 512,
+      "height": 512,
+      "rawWidth": 512,
+      "rawHeight": 512,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}
