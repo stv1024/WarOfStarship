@@ -2551,9 +2551,9 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 94,
-      "g": 176,
-      "b": 222,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_cascadeOpacityEnabled": true,
@@ -3432,9 +3432,9 @@
     "_N$lineHeight": 40,
     "_N$fontColor": {
       "__type__": "cc.Color",
-      "r": 94,
-      "g": 176,
-      "b": 222,
+      "r": 187,
+      "g": 191,
+      "b": 202,
       "a": 255
     },
     "_N$placeholder": "点击手动输入钱包地址……",
