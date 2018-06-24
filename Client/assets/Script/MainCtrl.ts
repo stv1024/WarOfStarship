@@ -29,12 +29,15 @@ export default class MainCtrl extends cc.Component {
 
     static Ticks = 0;
 
+    bgmHandler: number;
     start() {
         CvsMain.EnterUI(IntroUI);
 
-        let as = this.node.getComponent(cc.AudioSource);
+        // let as = this.node.getComponent(cc.AudioSource);
         setTimeout(() => {
-            as.play();
+            // as.play();
+            let url = cc.url.raw('resources/audio/bgm.mp3');
+            this.bgmHandler = cc.audioEngine.play(url, true, 0.5);
         }, 1000);
     }
 

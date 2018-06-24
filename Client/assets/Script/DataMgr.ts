@@ -192,6 +192,7 @@ export class BuildingInfo {
     CDPerUnit;
     MaxCD;
     MaxLevel;
+    Pic: string;
     Description: string;
 }
 export class BuildingData {

@@ -41,7 +41,7 @@ export default class HomeUI extends BaseUI {
 
     start() {
         ToastPanel.Toast('正在读取您的钱包信息，如果您在用钱包玩游戏，请稍候');
-        this.lblMusicButton.string = MainCtrl.Instance.getComponent(cc.AudioSource).volume > 0 ? '音乐：开' : '音乐：关';
+        // this.lblMusicButton.string = MainCtrl.Instance.getComponent(cc.AudioSource).volume > 0 ? '音乐：开' : '音乐：关';
     }
 
     update() {

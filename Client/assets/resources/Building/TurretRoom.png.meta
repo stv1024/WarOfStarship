@@ -1,14 +1,14 @@
 {
   "ver": "1.0.0",
-  "uuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+  "uuid": "f9f4273d-415a-4462-b347-ce7723028b30",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "subMetas": {
-    "starship": {
+    "TurretRoom": {
       "ver": "1.0.3",
-      "uuid": "620e2904-4c83-40dd-ae26-03b97067462b",
-      "rawTextureUuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+      "uuid": "7f879139-ab9c-4018-91f8-6c233c83e435",
+      "rawTextureUuid": "f9f4273d-415a-4462-b347-ce7723028b30",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
@@ -16,10 +16,10 @@
       "offsetY": 0,
       "trimX": 0,
       "trimY": 0,
-      "width": 256,
-      "height": 180,
-      "rawWidth": 256,
-      "rawHeight": 180,
+      "width": 512,
+      "height": 512,
+      "rawWidth": 512,
+      "rawHeight": 512,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

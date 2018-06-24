@@ -1,0 +1,30 @@
+{
+  "ver": "1.0.0",
+  "uuid": "19bd9442-6f72-4cca-ab4f-27e9969d825d",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "subMetas": {
+    "DecoLivingBunks": {
+      "ver": "1.0.3",
+      "uuid": "1ce1191d-aa57-4939-9104-a016cea24d3b",
+      "rawTextureUuid": "19bd9442-6f72-4cca-ab4f-27e9969d825d",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 21,
+      "offsetY": 7.5,
+      "trimX": 129,
+      "trimY": 108,
+      "width": 296,
+      "height": 281,
+      "rawWidth": 512,
+      "rawHeight": 512,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

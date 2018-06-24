@@ -1,14 +1,14 @@
 {
   "ver": "1.0.0",
-  "uuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+  "uuid": "5c87efbd-8160-43eb-945f-44419de84a18",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "subMetas": {
-    "starship": {
+    "DecoBigLids": {
       "ver": "1.0.3",
-      "uuid": "620e2904-4c83-40dd-ae26-03b97067462b",
-      "rawTextureUuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+      "uuid": "76db6777-d074-4c35-93af-d59edef04ff0",
+      "rawTextureUuid": "5c87efbd-8160-43eb-945f-44419de84a18",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
@@ -16,10 +16,10 @@
       "offsetY": 0,
       "trimX": 0,
       "trimY": 0,
-      "width": 256,
-      "height": 180,
-      "rawWidth": 256,
-      "rawHeight": 180,
+      "width": 512,
+      "height": 512,
+      "rawWidth": 512,
+      "rawHeight": 512,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

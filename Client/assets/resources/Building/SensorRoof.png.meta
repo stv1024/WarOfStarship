@@ -1,14 +1,14 @@
 {
   "ver": "1.0.0",
-  "uuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+  "uuid": "d70a1e4a-98cc-479f-8ec8-3b12c27bcb5e",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "subMetas": {
-    "starship": {
+    "SensorRoof": {
       "ver": "1.0.3",
-      "uuid": "620e2904-4c83-40dd-ae26-03b97067462b",
-      "rawTextureUuid": "926efbd0-6539-4c0e-9402-19a2c7a66ed5",
+      "uuid": "51616f10-5d13-4432-8e4b-2458dc22c14a",
+      "rawTextureUuid": "d70a1e4a-98cc-479f-8ec8-3b12c27bcb5e",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
@@ -17,9 +17,9 @@
       "trimX": 0,
       "trimY": 0,
       "width": 256,
-      "height": 180,
+      "height": 256,
       "rawWidth": 256,
-      "rawHeight": 180,
+      "rawHeight": 256,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,
