@@ -30,7 +30,7 @@ export default class BlockchainMgr extends cc.Component {
     static WalletAddress: string;
 
     static CheckWalletInterval = 10;
-    static FetchMyDataInterval = 5;
+    static FetchMyDataInterval = 7;
     static FetchAllDataInterval = 20;
 
     checkWalletCountdown = 1e9;

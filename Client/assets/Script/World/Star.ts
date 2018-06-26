@@ -44,7 +44,7 @@ export default class Star extends cc.Component {
 
     update(dt: number) {
         this.btn.opacity = (WorldUI.Instance.selectedObjectNode == this.node) || this.mouseHover ? 255 : 0;
-        this.btn.color = (WorldUI.Instance.selectedObjectNode == this.node) ? cc.Color.YELLOW : cc.Color.BLUE;
+        this.btn.color = (WorldUI.Instance.selectedObjectNode == this.node) ? cc.Color.YELLOW : new cc.Color(80, 80, 255);
         if (!this.info) return;
     }
 

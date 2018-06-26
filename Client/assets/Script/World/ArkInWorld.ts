@@ -33,6 +33,8 @@ export default class ArkInWorld extends cc.Component {
         this.refreshZoom(zoomScale);
 
         FlagMgr.setFlag(this.sprFlag, data.country);
+
+        this.node.active = true;
     }
 
     refreshZoom(zoomScale: number) {

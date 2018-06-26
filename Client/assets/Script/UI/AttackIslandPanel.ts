@@ -63,7 +63,7 @@ export default class AttackIslandPanel extends cc.Component {
         this.starInfo = starInfo;
         this.star = star;
 
-        console.log('AIP.setARef', star, starInfo)
+        console.log('AIP.setARef', starInfo)
         this.lblTitle.string = '恒星 #' + star.index;
 
         this.SldAtkTank.progress = 0;

@@ -82,7 +82,7 @@ export default class WorldUI extends BaseUI {
     @property(cc.Slider)
     sldZoom: cc.Slider = null;
     pressingZoomSlider = false;
-    zoomScale: number = 0.1;
+    zoomScale: number = 0.2;
     lastTickZoomScale = null;
 
     start() {
@@ -135,8 +135,7 @@ export default class WorldUI extends BaseUI {
         let i = 0;
         for (let address in DataMgr.othersData) {
             const data = DataMgr.othersData[address];
-            this.arkContainer.children[i + 1].getComponent(ArkInWorld).
-                setAndRefresh(data, this.zoomScale);
+            this.arkContainer.children[i + 1].getComponent(ArkInWorld).setAndRefresh(data, this.zoomScale);
             i++;
         }
     }
