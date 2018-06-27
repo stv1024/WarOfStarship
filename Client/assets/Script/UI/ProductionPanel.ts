@@ -92,12 +92,12 @@ export default class ProductionPanel extends cc.Component {
 
         const in0Amt = DataMgr.getBuildingInfoItemWithLv(this.buildingData.id, 'In0Amt', this.buildingData.lv);
         const in1Amt = DataMgr.getBuildingInfoItemWithLv(this.buildingData.id, 'In1Amt', this.buildingData.lv);
-
-        if (!(in0Amt * count <= DataMgr.myData.cargoData['iron'])) {
+        const curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
+        if (!(in0Amt * count <= curCargoData['iron'])) {
             DialogPanel.PopupWith1Button('铁不足', '采集更多或者减少生产份数', '确定', null);
             return;
         }
-        if (!(in1Amt * count <= DataMgr.myData.cargoData['energy'])) {
+        if (!(in1Amt * count <= curCargoData['energy'])) {
             DialogPanel.PopupWith1Button('反物质不足', '采集更多或者减少生产份数', '确定', null);
             return;
         }

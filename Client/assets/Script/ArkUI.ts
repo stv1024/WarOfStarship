@@ -456,7 +456,7 @@ export default class ArkUI extends BaseUI {
                 "需要" + ironCost + '铁',
                 '取消', null,
                 '升级', () => {
-                    if (DataMgr.myData.cargoData.iron < ironCost) {
+                    if (DataMgr.getUserCurrentCargoData(DataMgr.myData)['iron'] < ironCost) {
                         ToastPanel.Toast("铁不足");
                         return;
                     }

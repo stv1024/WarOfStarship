@@ -31,8 +31,9 @@ export default class BuildingButton extends cc.Component {
 
     onBuildClick() {
         //检查建筑材料
-        if (!DataMgr.myData.cargoData.iron || DataMgr.myData.cargoData.iron < this.info.IronCost) {
-            DialogPanel.PopupWith1Button('建筑材料不足', '需要' + this.info.IronCost + '铁，而你只有' + DataMgr.myData.cargoData.iron + '铁。', '确定', null);
+        let curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
+        if (!curCargoData['iron'] || curCargoData['iron'] < this.info.IronCost) {
+            DialogPanel.PopupWith1Button('建筑材料不足', '需要' + this.info.IronCost + '铁，而你只有' + curCargoData['iron'] + '铁。', '确定', null);
             return;
         }
         BuildPanel.Hide();

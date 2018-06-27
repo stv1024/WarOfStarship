@@ -141,6 +141,7 @@ export default class AttackIslandPanel extends cc.Component {
 
     refreshMethaneCost() {
         if (!DataMgr.myData) return;
+        const curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
         const myPos = DataMgr.getUserCurrentLocation(DataMgr.myData);
         const distance = starPos.sub(myPos).mag();
@@ -148,7 +149,7 @@ export default class AttackIslandPanel extends cc.Component {
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
-        const totalMethane = DataMgr.myData.cargoData.energy;
+        const totalMethane = curCargoData['energy'];
         this.lblDistance.string = distance.toPrecision(4) + 'ly';
         this.lblMethane.string = costMethane.toFixed() + '/' + totalMethane.toFixed();
     }
@@ -156,6 +157,7 @@ export default class AttackIslandPanel extends cc.Component {
     onConfirmClick() {
         if (!DataMgr.myData) return;
         console.log('准备攻占资源岛', this.star);
+        const curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
 
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);
         const myPos = DataMgr.getUserCurrentLocation(DataMgr.myData);
@@ -170,7 +172,7 @@ export default class AttackIslandPanel extends cc.Component {
             Math.round(this.SldAtkTank.progress * this.tankMax),
             Math.round(this.SldAtkChopper.progress * this.chopperMax),
             Math.round(this.SldAtkShip.progress * this.shipMax));
-        const energy = DataMgr.myData.cargoData.energy;
+        const energy = curCargoData['energy'];
         if (costMethane <= energy) {
             const tank = Math.round(this.SldAtkTank.progress * this.tankMax);
             const chopper = Math.round(this.SldAtkChopper.progress * this.chopperMax);

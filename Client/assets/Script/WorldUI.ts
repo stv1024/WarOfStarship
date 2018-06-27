@@ -441,7 +441,7 @@ export default class WorldUI extends BaseUI {
         let user = DataMgr.myData;
         let curLocation = DataMgr.getUserCurrentLocation(user);
         let energyCost = this.newDestination.sub(curLocation).mag() * (user.expandCnt + 5) * DataMgr.energyCostPerLyExpand;
-        if (user.cargoData.energy < energyCost) {
+        if (DataMgr.getUserCurrentCargoData(user)['energy'] < energyCost) {
             ToastPanel.Toast("反物质燃料不足");
             return;
         }
