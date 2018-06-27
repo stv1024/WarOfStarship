@@ -173,9 +173,10 @@ export default class BlockchainMgr extends cc.Component {
     onGetMyData(resp) {
         console.log('onGetMyData', resp);
         let user = JSON.parse(resp.result);
-
-        DataMgr.myData = user;
-        user.ticks = MainCtrl.Ticks;
+        if (user) {
+            DataMgr.myData = user;
+            user.ticks = MainCtrl.Ticks;
+        }
     }
 
     onGetAllMapData(resp) {
