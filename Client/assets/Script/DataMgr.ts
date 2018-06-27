@@ -87,7 +87,7 @@ export class DataMgr {
     static getExpandCost(curExpandCnt: number, addExpandCnt: number) {
         let cost = 0;
         for (let i = curExpandCnt; i < curExpandCnt + addExpandCnt; i++) {
-            cost += 0.0001 * Math.exp(0.15 * i);
+            cost += 0.0001 * Math.exp(0.1 * i);
         }
         return cost;
     }

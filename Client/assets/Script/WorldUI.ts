@@ -97,6 +97,7 @@ export default class WorldUI extends BaseUI {
             starNode.active = true;
 
             star.btn.on(cc.Node.EventType.TOUCH_MOVE, this.onPanPadTouchMove, this);
+            star.btn.on(cc.Node.EventType.MOUSE_WHEEL, this.onMouseWheel, this);
         }
         this.starTemplate.active = false;
     }

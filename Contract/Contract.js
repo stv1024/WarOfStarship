@@ -7,7 +7,7 @@ let User = function (jsonStr) {
             this[key] = obj[key];
         }
     } else {
-        let rad = Math.random() * Math.PI;
+        let rad = Math.random() * Math.PI * 2;
         this.nickname = "";
         this.address = "";
         this.country = "";
@@ -932,7 +932,7 @@ GameContract.prototype = {
         return {
             "success": true,
             "island": island
-        };;
+        };
     },
     takeRedundantNas: function (targetAddress, value) {
         if (Blockchain.transaction.from != this.adminAddress) {
@@ -942,8 +942,12 @@ GameContract.prototype = {
             throw new Error("Illegal Address.");
         }
 
-        this.totalNas = value.minus(value);
-        this._transaction(targetAddress, new BigNumber(value))
+        this.totalNas = this.totalNas.minus(value);
+        this._transaction(targetAddress, new BigNumber(value));
+        return {
+            "success": true,
+            "left": this.totalNas / 1e18
+        };
     },
     getStarInfo: function (index) {
         if (index >= this.totalStarCnt) {
@@ -985,7 +989,7 @@ GameContract.prototype = {
     getExpandCost: function (curExpandCnt, addExpandCnt) {
         let cost = 0;
         for (let i = curExpandCnt; i < curExpandCnt + addExpandCnt; i++) {
-            cost += 0.0001 * Math.exp(0.15 * i);
+            cost += 0.0001 * Math.exp(0.1 * i);
         }
         return cost;
     },
