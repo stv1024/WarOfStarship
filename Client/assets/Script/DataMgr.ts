@@ -123,8 +123,8 @@ export class DataMgr {
         let collectingHours = (curTime - user.lastCalcTime) / 3600000;
         let collectedIron = DataMgr.getUserCollectorRate(user, 'ironcoll') * collectingHours;
         let collectedEnergy = DataMgr.getUserCollectorRate(user, 'energycoll') * collectingHours;
-        curCargoData['iron'] = user.cargoData.iron + collectedIron;
-        curCargoData['energy'] = user.cargoData.energy + collectedEnergy;
+        curCargoData['iron'] = Math.max(user.cargoData.iron, Math.min(DataMgr.getUserWarehouseCap('iron'), user.cargoData.iron + collectedIron));
+        curCargoData['energy'] = Math.max(user.cargoData.energy, Math.min(DataMgr.getUserWarehouseCap('energy'), user.cargoData.energy + collectedEnergy));
         return curCargoData;
     }
     static getUserCollectorRate(user: UserData, buildingId: string) {
