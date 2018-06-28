@@ -285,7 +285,8 @@ GameContract.prototype = {
         if (destinationX === null || destinationY === null) {
             throw new Error("Parameters INVALID.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
+
         let locData = user.locationData;
         locData.speed = this.shipSpeed;
         locData.destinationX = destinationX;
@@ -311,7 +312,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         let locData = user.locationData;
 
         //check star, island distance
@@ -342,7 +343,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         let newExpandCnt = 0;
         for (let k = 0; k < ijList.length; k++) {
             let i = ijList[k][0];
@@ -382,7 +383,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         if (!user.expandMap[i + ',' + j]) {
             throw new Error("Build Failed. (" + i + ',' + j + ") has not yet expanded.");
         }
@@ -416,7 +417,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         if (!user.expandMap[i + ',' + j]) {
             throw new Error("Upgrade Failed. (" + i + ',' + j + ") has not yet expanded.");
         }
@@ -447,6 +448,7 @@ GameContract.prototype = {
         let cdMulti = this.allBuildingInfos.get('_upgradeRate').MaxCD;
         let maxCD = info.MaxCD * Math.pow(cdMulti, curLv + 1);
 
+        let curTime = (new Date()).valueOf();
         user.buildingMap[i + ',' + j].recoverTime = curTime + maxCD / 4;
         user.buildingMap[i + ',' + j].justBuildOrUpgrade = true;
 
@@ -463,10 +465,11 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         if (!user.buildingMap[i + ',' + j]) {
             throw new Error("Demolish Failed. (" + i + ',' + j + ") has no building.");
         }
+        let buildingId = user.buildingMap[i + ',' + j].id;
         //buildingInfo
         let info = this.allBuildingInfos.get(buildingId);
         if (info) {
@@ -496,7 +499,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         let building = user.buildingMap[i + ',' + j];
         if (!building) {
             throw new Error("Building NOT FOUND." + i + ',' + j);
@@ -562,8 +565,8 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
-        let locData = user.locData;
+        user = this._recalcUser(user);
+        let locData = user.locationData;
         //check distance
         let dx = locData.x - island.x;
         let dy = locData.y - island.y;
@@ -644,7 +647,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         let locData = user.locationData;
         //check distance
         let dx = locData.x - starInfo.x;
@@ -719,10 +722,10 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        this._recalcUser(user);
+        user = this._recalcUser(user);
         //outRate=abundance^2*1000
-        ironPerHour = starInfo.ironAbundance * starInfo.ironAbundance * 1000;
-        energyPerHour = starInfo.energyAbundance * starInfo.energyAbundance * 1000;
+        let ironPerHour = starInfo.ironAbundance * starInfo.ironAbundance * 10000;
+        let energyPerHour = starInfo.energyAbundance * starInfo.energyAbundance * 10000;
         let star = this.allStars.get(starIndex);
         if (!star) {
             throw new Error("Star is NOT Occupied." + starIndex);
@@ -792,6 +795,8 @@ GameContract.prototype = {
         user.lastCalcTime = curTime;
 
         this.allUsers.set(user.address, user);
+
+        return user;
     },
     _battle: function (bb1, cc1, dd1, bb2, cc2, dd2) { /*策划设定*/
         let c1 = 20; /*攻击方坦克攻击*/
