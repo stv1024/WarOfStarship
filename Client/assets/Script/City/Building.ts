@@ -7,7 +7,6 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class Building extends cc.Component {
 
-    ij: IJ;
     info: BuildingInfo;
     data: BuildingData;
 

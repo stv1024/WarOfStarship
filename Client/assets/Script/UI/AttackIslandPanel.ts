@@ -135,8 +135,8 @@ export default class AttackIslandPanel extends cc.Component {
         this.lblAtkChopperMax.string = '/' + this.chopperMax.toFixed();
         this.shipMax = Math.floor(DataMgr.myData.cargoData['laser']);
         this.lblAtkShipMax.string = '/' + this.shipMax.toFixed();
-        this.lblIronRate.string = (this.starInfo.ironAbundance * this.starInfo.ironAbundance * 1000).toPrecision(4) + '/h';
-        this.lblEnergyRate.string = (this.starInfo.energyAbundance * this.starInfo.energyAbundance * 1000).toPrecision(4) + '/h';
+        this.lblIronRate.string = (this.starInfo.ironAbundance * this.starInfo.ironAbundance * 10000).toPrecision(4) + '/h';
+        this.lblEnergyRate.string = (this.starInfo.energyAbundance * this.starInfo.energyAbundance * 10000).toPrecision(4) + '/h';
     }
 
     refreshMethaneCost() {
@@ -156,7 +156,7 @@ export default class AttackIslandPanel extends cc.Component {
 
     onConfirmClick() {
         if (!DataMgr.myData) return;
-        console.log('准备攻占资源岛', this.star);
+        console.log('准备攻占资源岛', this.star.name);
         const curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
 
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);

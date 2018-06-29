@@ -95,6 +95,7 @@ export default class WorldUI extends BaseUI {
             let star = starNode.getComponent(Star);
             star.setAndRefresh(index, starInfo);
             starNode.active = true;
+            starNode.name = index.toFixed();
 
             star.btn.on(cc.Node.EventType.TOUCH_MOVE, this.onPanPadTouchMove, this);
             star.btn.on(cc.Node.EventType.MOUSE_WHEEL, this.onMouseWheel, this);

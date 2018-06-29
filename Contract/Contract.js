@@ -48,6 +48,7 @@ let User = function (jsonStr) {
             laser: 0,
             waterdrop: 0,
             starlighter: 0,
+            exb: 0,
         };
         this.collectingStarIndex = null;
         this.lastCalcTime = (new Date()).valueOf();
@@ -285,7 +286,11 @@ GameContract.prototype = {
         if (destinationX === null || destinationY === null) {
             throw new Error("Parameters INVALID.");
         }
+        if (user.locationData === null) {
+            throw new Error("user should have locationData.");
+        }
         this._recalcUser(user);
+
         let locData = user.locationData;
         locData.speed = this.shipSpeed;
         locData.destinationX = destinationX;
@@ -447,6 +452,7 @@ GameContract.prototype = {
         let cdMulti = this.allBuildingInfos.get('_upgradeRate').MaxCD;
         let maxCD = info.MaxCD * Math.pow(cdMulti, curLv + 1);
 
+        let curTime = (new Date()).valueOf();
         user.buildingMap[i + ',' + j].recoverTime = curTime + maxCD / 4;
         user.buildingMap[i + ',' + j].justBuildOrUpgrade = true;
 
@@ -467,6 +473,7 @@ GameContract.prototype = {
         if (!user.buildingMap[i + ',' + j]) {
             throw new Error("Demolish Failed. (" + i + ',' + j + ") has no building.");
         }
+        let buildingId = user.buildingMap[i + ',' + j].id;
         //buildingInfo
         let info = this.allBuildingInfos.get(buildingId);
         if (info) {
@@ -563,7 +570,7 @@ GameContract.prototype = {
             throw new Error("User NOT FOUND.");
         }
         this._recalcUser(user);
-        let locData = user.locData;
+        let locData = user.locationData;
         //check distance
         let dx = locData.x - island.x;
         let dy = locData.y - island.y;
@@ -721,8 +728,8 @@ GameContract.prototype = {
         }
         this._recalcUser(user);
         //outRate=abundance^2*1000
-        ironPerHour = starInfo.ironAbundance * starInfo.ironAbundance * 1000;
-        energyPerHour = starInfo.energyAbundance * starInfo.energyAbundance * 1000;
+        let ironPerHour = starInfo.ironAbundance * starInfo.ironAbundance * 10000;
+        let energyPerHour = starInfo.energyAbundance * starInfo.energyAbundance * 10000;
         let star = this.allStars.get(starIndex);
         if (!star) {
             throw new Error("Star is NOT Occupied." + starIndex);
@@ -744,6 +751,41 @@ GameContract.prototype = {
             "result_data": { star: star, user: user }
         };
     },
+    transfer: function (receiverAddress, cargoName, amount) {
+        let userAddress = Blockchain.transaction.from;
+        let user = this.allUsers.get(userAddress);
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        this._recalcUser(user);
+
+        let receiver = this.allUsers.get(receiverAddress);
+        if (receiver === null) {
+            throw new Error("Receiver NOT FOUND.");
+        }
+        this._recalcUser(receiver);
+
+        //check distance
+        let dx = user.locationData.x - receiver.locationData.x;
+        let dy = user.locationData.y - receiver.locationData.y;
+        let dist = Math.sqrt(dx * dx + dy + dy);
+        if (dist > 20) {
+            throw new Error("Too far from the receiver. distance:" + dist);
+        }
+
+        user.cargoData[cargoName] -= amount;
+        receiver.cargoData[cargoName] += amount;
+        if (user.cargoData[cargoName] < 0) {
+            throw new Error("user cargo NOT ENOUGH to transfer." + user.cargoData[cargoName]);
+        }
+        
+        this.allUsers.set(userAddress, user);
+        this.allUsers.set(receiverAddress, receiver);
+
+        return {
+            "success": true,
+        };
+    },
     getSailEnergyCost: function (user) {
         let locData = user.locationData;
         if (locData.destinationX === null || locData.destinationY === null) return 0;
@@ -763,7 +805,6 @@ GameContract.prototype = {
         let curTime = (new Date()).valueOf();
         //location
         let locData = user.locationData;
-        if (locData.destinationX === null || locData.destinationY === null) return 0;
         let dX = locData.destinationX - locData.lastLocationX;
         let dY = locData.destinationY - locData.lastLocationY;
         let dist = Math.sqrt(dX * dX + dY * dY);
@@ -790,8 +831,6 @@ GameContract.prototype = {
         user.cargoData.energy += collectedEnergy;
 
         user.lastCalcTime = curTime;
-
-        this.allUsers.set(user.address, user);
     },
     _battle: function (bb1, cc1, dd1, bb2, cc2, dd2) { /*策划设定*/
         let c1 = 20; /*攻击方坦克攻击*/

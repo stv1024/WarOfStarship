@@ -15,7 +15,7 @@ declare var Neb: any;
 declare var NebPay: any;
 declare var Account: any;
 declare var HttpRequest: any;
-export const ContractAddress = 'n1tc16XJ2m45k8BeDP7DpckfSfypacVLghx'; //
+export const ContractAddress = 'n1fALBF8Z4zzHaTkiLC7XCs97DoFobTeXJV';//'n1wJnaszNyRzV8EFmA7UMnkXSC4Cugb8Zp8'; //
 export const EncKey = 37234;
 
 @ccclass
@@ -30,7 +30,7 @@ export default class BlockchainMgr extends cc.Component {
     static WalletAddress: string;
 
     static CheckWalletInterval = 10;
-    static FetchMyDataInterval = 7;
+    static FetchMyDataInterval = 5;
     static FetchAllDataInterval = 20;
 
     checkWalletCountdown = 1e9;

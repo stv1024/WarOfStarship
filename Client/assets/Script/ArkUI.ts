@@ -409,7 +409,7 @@ export default class ArkUI extends BaseUI {
     @property(cc.Node)
     nodProduceButton: cc.Node = null;
     selectBuilding(building: Building) {
-        console.log('选中建筑', building);
+        console.log('选中建筑', building.name);
         this.selectedBuilding = building;
     }
     deselectBuilding() {
