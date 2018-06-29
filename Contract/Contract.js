@@ -747,6 +747,38 @@ GameContract.prototype = {
             "result_data": { star: star, user: user }
         };
     },
+    transfer: function (receiverAddress, cargoName, amount) {
+        let userAddress = Blockchain.transaction.from;
+        let user = this.allUsers.get(userAddress);
+        if (user === null) {
+            throw new Error("User NOT FOUND.");
+        }
+        user = this._recalcUser(user);
+
+        let receiver = this.allUsers.get(receiverAddress);
+        if (receiver === null) {
+            throw new Error("Receiver NOT FOUND.");
+        }
+        receiver = this._recalcUser(receiver);
+
+        //check distance
+        let dx = user.locationData.x - receiver.locationData.x;
+        let dy = user.locationData.y - receiver.locationData.y;
+        let dist = Math.sqrt(dx * dx + dy + dy);
+        if (dist > 100) {
+            throw new Error("Too far from the receiver. distance:" + dist);
+        }
+
+        user.cargoData[cargoName] -= amount;
+        receiver.cargoData[cargoName] += amount;
+        if (user.cargoData[cargoName] < 0) {
+            throw new Error("user cargo NOT ENOUGH to transfer." + user.cargoData[cargoName]);
+        }
+
+        return {
+            "success": true,
+        };
+    },
     getSailEnergyCost: function (user) {
         let locData = user.locationData;
         if (locData.destinationX === null || locData.destinationY === null) return 0;
