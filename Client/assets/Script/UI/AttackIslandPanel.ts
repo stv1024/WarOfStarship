@@ -156,7 +156,7 @@ export default class AttackIslandPanel extends cc.Component {
 
     onConfirmClick() {
         if (!DataMgr.myData) return;
-        console.log('准备攻占资源岛', this.star);
+        console.log('准备攻占资源岛', this.star.name);
         const curCargoData = DataMgr.getUserCurrentCargoData(DataMgr.myData);
 
         const starPos = new cc.Vec2(this.starInfo.x, this.starInfo.y);

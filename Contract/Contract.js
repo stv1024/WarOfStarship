@@ -48,6 +48,7 @@ let User = function (jsonStr) {
             laser: 0,
             waterdrop: 0,
             starlighter: 0,
+            exb: 0,
         };
         this.collectingStarIndex = null;
         this.lastCalcTime = (new Date()).valueOf();
@@ -285,7 +286,10 @@ GameContract.prototype = {
         if (destinationX === null || destinationY === null) {
             throw new Error("Parameters INVALID.");
         }
-        user = this._recalcUser(user);
+        if (user.locationData === null) {
+            throw new Error("user should have locationData.");
+        }
+        this._recalcUser(user);
 
         let locData = user.locationData;
         locData.speed = this.shipSpeed;
@@ -312,7 +316,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         let locData = user.locationData;
 
         //check star, island distance
@@ -343,7 +347,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         let newExpandCnt = 0;
         for (let k = 0; k < ijList.length; k++) {
             let i = ijList[k][0];
@@ -383,7 +387,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         if (!user.expandMap[i + ',' + j]) {
             throw new Error("Build Failed. (" + i + ',' + j + ") has not yet expanded.");
         }
@@ -417,7 +421,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         if (!user.expandMap[i + ',' + j]) {
             throw new Error("Upgrade Failed. (" + i + ',' + j + ") has not yet expanded.");
         }
@@ -465,7 +469,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         if (!user.buildingMap[i + ',' + j]) {
             throw new Error("Demolish Failed. (" + i + ',' + j + ") has no building.");
         }
@@ -499,7 +503,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         let building = user.buildingMap[i + ',' + j];
         if (!building) {
             throw new Error("Building NOT FOUND." + i + ',' + j);
@@ -565,7 +569,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         let locData = user.locationData;
         //check distance
         let dx = locData.x - island.x;
@@ -647,7 +651,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         let locData = user.locationData;
         //check distance
         let dx = locData.x - starInfo.x;
@@ -722,7 +726,7 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
         //outRate=abundance^2*1000
         let ironPerHour = starInfo.ironAbundance * starInfo.ironAbundance * 10000;
         let energyPerHour = starInfo.energyAbundance * starInfo.energyAbundance * 10000;
@@ -753,19 +757,19 @@ GameContract.prototype = {
         if (user === null) {
             throw new Error("User NOT FOUND.");
         }
-        user = this._recalcUser(user);
+        this._recalcUser(user);
 
         let receiver = this.allUsers.get(receiverAddress);
         if (receiver === null) {
             throw new Error("Receiver NOT FOUND.");
         }
-        receiver = this._recalcUser(receiver);
+        this._recalcUser(receiver);
 
         //check distance
         let dx = user.locationData.x - receiver.locationData.x;
         let dy = user.locationData.y - receiver.locationData.y;
         let dist = Math.sqrt(dx * dx + dy + dy);
-        if (dist > 100) {
+        if (dist > 20) {
             throw new Error("Too far from the receiver. distance:" + dist);
         }
 
@@ -774,6 +778,9 @@ GameContract.prototype = {
         if (user.cargoData[cargoName] < 0) {
             throw new Error("user cargo NOT ENOUGH to transfer." + user.cargoData[cargoName]);
         }
+        
+        this.allUsers.set(userAddress, user);
+        this.allUsers.set(receiverAddress, receiver);
 
         return {
             "success": true,
@@ -798,7 +805,6 @@ GameContract.prototype = {
         let curTime = (new Date()).valueOf();
         //location
         let locData = user.locationData;
-        if (locData.destinationX === null || locData.destinationY === null) return 0;
         let dX = locData.destinationX - locData.lastLocationX;
         let dY = locData.destinationY - locData.lastLocationY;
         let dist = Math.sqrt(dX * dX + dY * dY);
@@ -825,10 +831,6 @@ GameContract.prototype = {
         user.cargoData.energy += collectedEnergy;
 
         user.lastCalcTime = curTime;
-
-        this.allUsers.set(user.address, user);
-
-        return user;
     },
     _battle: function (bb1, cc1, dd1, bb2, cc2, dd2) { /*策划设定*/
         let c1 = 20; /*攻击方坦克攻击*/
