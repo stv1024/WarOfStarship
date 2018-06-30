@@ -13,6 +13,7 @@ import ToastPanel from "./UI/ToastPanel";
 import ProductionPanel from "./UI/ProductionPanel";
 import CollectorBuilding from "./City/CollectorBuilding";
 import ProducerBuilding from "./City/ProducerBuilding";
+import TransferPanel from "./UI/TransferPanel";
 
 const { ccclass, property } = cc._decorator;
 
@@ -129,9 +130,9 @@ export default class ArkUI extends BaseUI {
             let warehouseCap = DataMgr.getUserWarehouseCap(cargoId).toFixed();
             if (DataMgr.getBuildingInfo(cargoId + 'coll')) {
                 let estimateRate = DataMgr.getUserCollectorRate(DataMgr.myData, cargoId + 'coll');
-                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() +'/' + warehouseCap + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + '/h)';
+                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() + '/' + warehouseCap + '(' + (estimateRate > 0 ? '+' : '') + estimateRate.toFixed() + '/h)';
             } else {
-                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() +'/' + warehouseCap;
+                str = cargoInfo.Name + '   ' + Math.floor(cargoData[cargoInfo.id]).toFixed() + '/' + warehouseCap;
             }
             this.cargoLabels[cargoInfo.id].string = str;
         }
@@ -490,5 +491,9 @@ export default class ArkUI extends BaseUI {
         ProductionPanel.Instance.node.active = true;
         ProductionPanel.Instance.setAndRefresh(this.selectedBuilding, DataMgr.myData.buildingMap[this.selectedBuilding.node.name]);
 
+    }
+
+    onTransferBtnClick() {
+        TransferPanel.Instance.node.active = true;
     }
 }
