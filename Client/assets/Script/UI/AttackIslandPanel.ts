@@ -76,6 +76,8 @@ export default class AttackIslandPanel extends cc.Component {
         // this.onSliderChange(null, 'Chopper');
         // this.onSliderChange(null, 'Ship');
         this.refreshMethaneCost();
+        this.lblIronRate.string = (this.starInfo.ironAbundance * this.starInfo.ironAbundance * 10000).toPrecision(4) + '/h';
+        this.lblEnergyRate.string = (this.starInfo.energyAbundance * this.starInfo.energyAbundance * 10000).toPrecision(4) + '/h';
     }
 
     onSliderChange(event, cargoName: string) {
@@ -122,7 +124,7 @@ export default class AttackIslandPanel extends cc.Component {
         let starData = this.star.data;
         let amIOccupant = starData && DataMgr.myData.address == starData.occupant;
         let occupantData = amIOccupant ? DataMgr.myData :
-            (starData && starData.occupant ? DataMgr.othersData.find(d => d.address == starData.occupant) : null);
+            (starData && starData.occupant ? DataMgr.othersData[starData.occupant] : null);
         this.lblOccupant.string = occupantData ? occupantData.nickname :
             (starData ? starData.occupant : '无');
         this.lblConfirmButton.string = amIOccupant ? '追加' : '进攻';
@@ -135,8 +137,6 @@ export default class AttackIslandPanel extends cc.Component {
         this.lblAtkChopperMax.string = '/' + this.chopperMax.toFixed();
         this.shipMax = Math.floor(DataMgr.myData.cargoData['laser']);
         this.lblAtkShipMax.string = '/' + this.shipMax.toFixed();
-        this.lblIronRate.string = (this.starInfo.ironAbundance * this.starInfo.ironAbundance * 10000).toPrecision(4) + '/h';
-        this.lblEnergyRate.string = (this.starInfo.energyAbundance * this.starInfo.energyAbundance * 10000).toPrecision(4) + '/h';
     }
 
     refreshMethaneCost() {

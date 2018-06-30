@@ -129,6 +129,7 @@ export default class BlockchainMgr extends cc.Component {
         try {
             let neb = new Neb();
             neb.setRequest(new HttpRequest(BlockchainMgr.BlockchainUrl));
+            console.log("区块链getFunction(", functionName, callArgs);
 
             let from = BlockchainMgr.WalletAddress ? BlockchainMgr.WalletAddress : Account.NewAccount().getAddressString();
             var value = "0";

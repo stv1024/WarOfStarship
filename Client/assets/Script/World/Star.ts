@@ -58,6 +58,19 @@ export default class Star extends cc.Component {
         BlockchainMgr.Instance.getFunction('getStarData', [this.index], (resp) => { self.data = JSON.parse(resp.result); });
     }
 
+    getCanCollectCargos() {
+        let cargos = { iron: 0, energy: 0 };
+        if (!this.data) return cargos;
+
+        let ironPerHour = this.info.ironAbundance * this.info.ironAbundance * 10000;
+        let energyPerHour = this.info.energyAbundance * this.info.energyAbundance * 10000;
+        let curTs = (new Date()).valueOf();
+        let hoursDelta = (curTs - this.data.lastMineTime) / (1000 * 3600);
+        cargos.iron = ironPerHour * hoursDelta;
+        cargos.energy = energyPerHour * hoursDelta;
+        return cargos;
+    }
+
     static getColor(starInfo: StarInfo) {
         let red = Math.min(1, MathUtil.lerp(0.5, 1.2, starInfo.ironAbundance, true));
         let green = Math.min(1, MathUtil.lerp(0.5, 1.2, starInfo.energyAbundance, true));
