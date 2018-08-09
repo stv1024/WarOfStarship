@@ -7,7 +7,7 @@
 
 整个游戏的逻辑都运行在NEO链上，可以很好地体现区块链的公开透明和资金流无障碍运转。
 
-![主界面](https://github.com/stv1024/WarOfStarshipNEO/blob/master/Art/0.jpg)
+![主界面](https://github.com/stv1024/WarOfStarshipNEO/blob/master/Art/1.jpg)
 ## 星舰部分
 
 十余种舰船设施和若干等级。
